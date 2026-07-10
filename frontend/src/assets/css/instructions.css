@@ -1,0 +1,142 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Poppins,sans-serif;
+}
+
+.instructions-page{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#eef4ff;
+
+    padding:40px;
+
+}
+
+.instructions-card{
+
+    width:750px;
+
+    background:white;
+
+    padding:45px;
+
+    border-radius:20px;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.1);
+
+}
+
+.instructions-card h1{
+
+    color:#2563eb;
+
+    text-align:center;
+
+    margin-bottom:10px;
+
+}
+
+.subtitle{
+
+    text-align:center;
+
+    color:#666;
+
+    margin-bottom:35px;
+
+}
+
+.instruction-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:15px;
+
+}
+
+.instruction-item{
+
+    background:#f8fafc;
+
+    padding:18px;
+
+    border-left:5px solid #2563eb;
+
+    border-radius:8px;
+
+    font-size:17px;
+
+}
+
+.checkbox{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin:30px 0;
+
+    font-size:16px;
+
+}
+
+.checkbox input{
+
+    width:20px;
+
+    height:20px;
+
+}
+
+.start-btn{
+
+    width:100%;
+
+    padding:15px;
+
+    border:none;
+
+    background:#2563eb;
+
+    color:white;
+
+    font-size:18px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.start-btn:hover{
+
+    background:#1d4ed8;
+
+}
+
+@media(max-width:768px){
+
+.instructions-card{
+
+width:100%;
+
+padding:30px;
+
+}
+
+}

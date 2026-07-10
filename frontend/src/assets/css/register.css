@@ -1,0 +1,146 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Poppins,sans-serif;
+}
+
+.register-page{
+
+    display:flex;
+    min-height:100vh;
+
+}
+
+.register-left{
+
+    flex:1;
+    background:linear-gradient(135deg,#2563eb,#1e3a8a);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:50px;
+
+}
+
+.overlay{
+
+    max-width:450px;
+
+}
+
+.overlay h1{
+
+    font-size:48px;
+    margin-bottom:20px;
+
+}
+
+.overlay p{
+
+    line-height:35px;
+    font-size:20px;
+
+}
+
+.register-right{
+
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#f8fafc;
+
+}
+
+.register-card{
+
+    width:450px;
+    background:white;
+    padding:40px;
+    border-radius:15px;
+    box-shadow:0 10px 30px rgba(0,0,0,.1);
+
+}
+
+.register-card h2{
+
+    margin-bottom:25px;
+    text-align:center;
+
+}
+
+.register-card input{
+
+    width:100%;
+    padding:15px;
+    margin-bottom:18px;
+    border:1px solid #ccc;
+    border-radius:10px;
+    outline:none;
+
+}
+
+.register-card input:focus{
+
+    border-color:#2563eb;
+
+}
+
+.register-card button{
+
+    width:100%;
+    padding:15px;
+    border:none;
+    background:#2563eb;
+    color:white;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:17px;
+
+}
+
+.register-card button:hover{
+
+    background:#1d4ed8;
+
+}
+
+.register-card p{
+
+    text-align:center;
+    margin-top:20px;
+
+}
+
+.register-card a{
+
+    text-decoration:none;
+    color:#2563eb;
+    margin-left:5px;
+
+}
+
+@media(max-width:900px){
+
+.register-page{
+
+flex-direction:column;
+
+}
+
+.register-left{
+
+display:none;
+
+}
+
+.register-card{
+
+width:90%;
+margin:40px 0;
+
+}
+
+}
