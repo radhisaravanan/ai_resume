@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { FaArrowRightToBracket, FaUserGraduate } from "react-icons/fa6";
 import API from "../services/api";
 import "../assets/css/login.css";
 
@@ -8,16 +9,10 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (!email || !password) {
-      alert("Please enter Email and Password");
-      return;
-    }
 
     setLoading(true);
 
@@ -28,10 +23,8 @@ function Login() {
       });
 
       if (response.data.success) {
-        // Save JWT Token
         localStorage.setItem("token", response.data.token);
 
-        // Save user if backend returns it
         if (response.data.user) {
           localStorage.setItem("user", JSON.stringify(response.data.user));
         }
@@ -43,7 +36,7 @@ function Login() {
         alert(response.data.message);
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Login Failed. Please try again.");
+      alert(error.response?.data?.message || "Login Failed");
     } finally {
       setLoading(false);
     }
@@ -53,14 +46,21 @@ function Login() {
     <div className="login-page">
       <div className="login-right">
         <div className="login-card">
-          <h2>Login</h2>
+          <div className="login-header">
+            <h2>
+              <FaUserGraduate className="header-icon" />
+              Student Login
+            </h2>
+
+            <p>Sign in to start your AI Interview</p>
+          </div>
 
           <form onSubmit={handleLogin}>
             <label>Email</label>
 
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="Enter Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -70,40 +70,22 @@ function Login() {
 
             <input
               type="password"
-              placeholder="Enter your password"
+              placeholder="Enter Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
 
-            <div className="login-options">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                />
-                Remember Me
-              </label>
-
+            <div className="forgot-password">
               <a href="#">Forgot Password?</a>
             </div>
 
             <button type="submit" className="login-btn" disabled={loading}>
+              <FaArrowRightToBracket />
+
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>
-
-          <div className="divider">
-            <span>OR</span>
-          </div>
-
-          <button className="google-btn">Continue with Google</button>
-
-          <p className="register-text">
-            Don't have an account?
-            <Link to="/register">Register</Link>
-          </p>
         </div>
       </div>
     </div>

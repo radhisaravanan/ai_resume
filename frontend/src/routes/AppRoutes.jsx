@@ -16,45 +16,66 @@ import About from "../pages/About";
 import Features from "../pages/Features";
 import Contact from "../pages/Contact";
 import NotFound from "../pages/NotFound";
+import InterviewHistory from "../pages/InterviewHistory";
+
+
+
 
 function AppRoutes() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Home */}
-        <Route path="/" element={<Home />} />
 
-        {/* Authentication */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    return (
 
-        {/* Dashboard */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        <BrowserRouter>
 
-        {/* Resume */}
-        <Route path="/upload-resume" element={<UploadResume />} />
-        <Route path="/resume-analysis" element={<ResumeAnalysis />} />
+            <Routes>
 
-        {/* Interview */}
-        <Route path="/instructions" element={<Instructions />} />
-        <Route path="/interview-setup" element={<InterviewSetup />} />
-        <Route path="/interview" element={<Interview />} />
-        <Route path="/result" element={<Result />} />
+                <Route path="/" element={<Home />} />
 
-        {/* User */}
-        <Route path="/history" element={<History />} />
-        <Route path="/profile" element={<Profile />} />
+                <Route path="/login" element={<Login />} />
 
-        {/* Website Pages */}
-        <Route path="/features" element={<Features />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
+                <Route path="/register" element={<Register />} />
 
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  );
+                <Route path="/dashboard" element={<Dashboard />} />
+
+                <Route path="/upload-resume" element={<UploadResume />} />
+
+                <Route path="/resume-analysis" element={<ResumeAnalysis />} />
+
+                <Route path="/instructions" element={<Instructions />} />
+
+                <Route path="/interview-setup" element={<InterviewSetup />} />
+
+                <Route path="/interview" element={<Interview />} />
+
+                <Route path="/result" element={<Result />} />
+
+                <Route path="/history" element={<History />} />
+
+                <Route path="/profile" element={<Profile />} />
+
+                <Route path="/features" element={<Features />} />
+
+                <Route path="/about" element={<About />} />
+
+                <Route path="/contact" element={<Contact />} />
+
+                <Route path="*" element={<NotFound />} />
+
+
+
+<Route 
+path="/interview-history" 
+element={<InterviewHistory/>}
+/>
+
+
+
+            </Routes>
+
+        </BrowserRouter>
+
+    );
+
 }
 
 export default AppRoutes;

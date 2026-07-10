@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+
 import {
     FaMicrophone,
     FaHistory,
@@ -8,40 +9,53 @@ import {
 
 import "../assets/css/dashboard.css";
 
+
 function Dashboard() {
 
+
     const interviews = [
+
         {
             interview: "React Developer",
             date: "10 Jul 2026",
             score: "92%",
             status: "Completed"
         },
+
         {
             interview: "Java Developer",
             date: "08 Jul 2026",
             score: "88%",
             status: "Completed"
         },
+
         {
             interview: "PHP Developer",
             date: "05 Jul 2026",
             score: "85%",
             status: "Completed"
         }
+
     ];
+
+
 
     return (
 
         <div className="dashboard">
 
+
             {/* Header */}
 
             <div className="dashboard-header">
 
+
                 <div>
 
-                    <h1>Welcome 👋</h1>
+                    <h1>
+                        Welcome 👋
+                    </h1>
+
 
                     <p>
                         Prepare yourself with AI-powered interviews.
@@ -49,19 +63,30 @@ function Dashboard() {
 
                 </div>
 
+
+
                 <button className="logout-btn">
 
                     Logout
 
                 </button>
 
+
             </div>
+
+
+
+
 
             {/* Dashboard Cards */}
 
+
             <div className="dashboard-cards">
 
+
+
                 {/* Start Interview */}
+
 
                 <Link
                     to="/interview-setup"
@@ -70,118 +95,204 @@ function Dashboard() {
 
                     <FaMicrophone className="card-icon" />
 
-                    <h3>Start New Interview</h3>
+
+                    <h3>
+                        Start New Interview
+                    </h3>
+
 
                     <p>
-
                         Select your department, role and interview preferences.
-
                     </p>
+
 
                 </Link>
 
-                {/* History */}
 
+
+
+
+
+                {/* Interview History */}
+
+                
                 <Link
-                    to="/history"
+                    to="/interview-history"
                     className="card"
                 >
 
+
                     <FaHistory className="card-icon" />
 
-                    <h3>Interview History</h3>
+
+                    <h3>
+                        Interview History
+                    </h3>
+
 
                     <p>
-
-                        View your previous interview reports.
-
+                        View your previous interview reports and performance.
                     </p>
+
 
                 </Link>
 
+
+
+
+
+
+
                 {/* Profile */}
+
 
                 <Link
                     to="/profile"
                     className="card"
                 >
 
+
                     <FaUserCircle className="card-icon" />
 
-                    <h3>Profile</h3>
+
+                    <h3>
+                        Profile
+                    </h3>
+
 
                     <p>
-
                         Update your personal information.
-
                     </p>
+
 
                 </Link>
 
+
+
+
+
+
+
                 {/* Analytics */}
+
 
                 <Link
                     to="/analytics"
                     className="card"
                 >
 
+
                     <FaChartBar className="card-icon" />
 
-                    <h3>Performance Analytics</h3>
+
+                    <h3>
+                        Performance Analytics
+                    </h3>
+
 
                     <p>
-
                         Track your interview scores and progress.
-
                     </p>
+
 
                 </Link>
 
+
+
             </div>
+
+
+
+
+
+
+
 
             {/* Recent Interviews */}
 
+
+
             <div className="recent">
 
+
                 <h2>
-
                     Recent Interviews
-
                 </h2>
+
+
+
 
                 <table>
 
+
                     <thead>
+
 
                         <tr>
 
-                            <th>Interview</th>
+                            <th>
+                                Interview
+                            </th>
 
-                            <th>Date</th>
 
-                            <th>Score</th>
+                            <th>
+                                Date
+                            </th>
 
-                            <th>Status</th>
+
+                            <th>
+                                Score
+                            </th>
+
+
+                            <th>
+                                Status
+                            </th>
+
 
                         </tr>
 
+
                     </thead>
+
+
+
+
 
                     <tbody>
 
+
+
                         {
 
-                            interviews.map((item, index) => (
+                            interviews.map((item,index)=>(
+
 
                                 <tr key={index}>
 
-                                    <td>{item.interview}</td>
-
-                                    <td>{item.date}</td>
-
-                                    <td>{item.score}</td>
 
                                     <td>
+                                        {item.interview}
+                                    </td>
+
+
+
+                                    <td>
+                                        {item.date}
+                                    </td>
+
+
+
+
+                                    <td>
+                                        {item.score}
+                                    </td>
+
+
+
+
+                                    <td>
+
 
                                         <span className="status">
 
@@ -189,24 +300,42 @@ function Dashboard() {
 
                                         </span>
 
+
                                     </td>
+
+
 
                                 </tr>
 
+
+
                             ))
+
 
                         }
 
+
+
                     </tbody>
+
+
 
                 </table>
 
+
+
+
             </div>
+
+
 
         </div>
 
+
     );
 
+
 }
+
 
 export default Dashboard;

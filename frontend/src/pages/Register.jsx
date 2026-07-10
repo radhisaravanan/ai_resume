@@ -20,6 +20,7 @@ function Register() {
   const handleChange = (e) => {
     setForm({
       ...form,
+
       [e.target.name]: e.target.value,
     });
   };
@@ -29,6 +30,7 @@ function Register() {
 
     if (form.password !== form.confirmPassword) {
       alert("Passwords do not match");
+
       return;
     }
 

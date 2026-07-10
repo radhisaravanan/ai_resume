@@ -269,11 +269,11 @@
 
     border-radius:12px;
 
-    font-size:18px;
+    font-size:17px;
 
     font-weight:600;
 
-    transition:.35s;
+    transform:translateY(-5px);
 
 }
 
@@ -282,6 +282,7 @@
     background:#2563eb;
 
     color:white;
+    
 
     transform:translateY(-5px);
 
@@ -418,7 +419,7 @@ padding:120px 20px 60px;
 
 .hero-left h1{
 
-font-size:38px;
+font-size:30px;
 
 }
 

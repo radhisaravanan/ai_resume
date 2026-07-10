@@ -6,9 +6,10 @@ const jwt = require("jsonwebtoken");
 // Register API
 // =======================
 exports.register = async (req, res) => {
-  const { full_name, email, password } = req.body;
+  const { full_name, email, phone, college, password } = req.body;
 
-  if (!full_name || !email || !password) {
+  // Validate all fields
+  if (!full_name || !email || !phone || !college || !password) {
     return res.status(400).json({
       success: false,
       message: "All fields are required",
@@ -36,9 +37,15 @@ exports.register = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        const sql = `
+          INSERT INTO users
+          (full_name, email, phone, college, password)
+          VALUES (?, ?, ?, ?, ?)
+        `;
+
         db.query(
-          "INSERT INTO users(full_name, email, password) VALUES (?, ?, ?)",
-          [full_name, email, hashedPassword],
+          sql,
+          [full_name, email, phone, college, hashedPassword],
           (err, data) => {
             if (err) {
               return res.status(500).json({
@@ -118,7 +125,7 @@ exports.login = (req, res) => {
         },
       );
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Login Successful",
         token,
@@ -126,6 +133,8 @@ exports.login = (req, res) => {
           id: user.id,
           full_name: user.full_name,
           email: user.email,
+          phone: user.phone,
+          college: user.college,
           role: user.role,
         },
       });

@@ -137,65 +137,50 @@ function InterviewSetup() {
 
     };
 
-    return (
+ 
+return (
+    <div className="setup-page">
 
-        <div className="setup-page">
+        <div className="setup-container">
 
-            <div className="setup-card">
+            <div className="setup-form">
 
-                <h1>🤖 AI Interview Setup</h1>
+                <div className="page-title">
 
-                <p>
+                    <img
+                        src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png"
+                        alt="AI Interview"
+                        className="setup-image"
+                    />
 
-                    Choose your interview preferences before starting.
+                    <h1> AI Interview </h1>
 
-                </p>
+                
+
+                </div>
 
                 {/* Department */}
 
-                <div className="form-group">
+                <div className="input-box">
 
                     <label>Department</label>
 
                     <select
-
                         value={department}
-
                         onChange={(e) => {
-
                             setDepartment(e.target.value);
-
                             setRole("");
-
                         }}
-
                     >
+                        <option value="">Select Department</option>
 
-                        <option value="">
+                        {Object.keys(roleData).map((dept) => (
 
-                            Select Department
+                            <option key={dept} value={dept}>
+                                {dept}
+                            </option>
 
-                        </option>
-
-                        {
-
-                            Object.keys(roleData).map((dept) => (
-
-                                <option
-
-                                    key={dept}
-
-                                    value={dept}
-
-                                >
-
-                                    {dept}
-
-                                </option>
-
-                            ))
-
-                        }
+                        ))}
 
                     </select>
 
@@ -203,51 +188,26 @@ function InterviewSetup() {
 
                 {/* Job Role */}
 
-                <div className="form-group">
+                <div className="input-box">
 
                     <label>Job Role</label>
 
                     <select
-
                         value={role}
-
+                        onChange={(e) => setRole(e.target.value)}
                         disabled={!department}
-
-                        onChange={(e) =>
-
-                            setRole(e.target.value)
-
-                        }
-
                     >
 
-                        <option value="">
+                        <option value="">Select Job Role</option>
 
-                            Select Job Role
+                        {department &&
+                            roleData[department].map((job) => (
 
-                        </option>
-
-                        {
-
-                            department &&
-
-                            roleData[department].map((item) => (
-
-                                <option
-
-                                    key={item}
-
-                                    value={item}
-
-                                >
-
-                                    {item}
-
+                                <option key={job} value={job}>
+                                    {job}
                                 </option>
 
-                            ))
-
-                        }
+                            ))}
 
                     </select>
 
@@ -255,28 +215,18 @@ function InterviewSetup() {
 
                 {/* Experience */}
 
-                <div className="form-group">
+                <div className="input-box">
 
                     <label>Experience</label>
 
                     <select
-
                         value={experience}
-
-                        onChange={(e) =>
-
-                            setExperience(e.target.value)
-
-                        }
-
+                        onChange={(e) => setExperience(e.target.value)}
                     >
 
                         <option>Fresher</option>
-
                         <option>1-2 Years</option>
-
                         <option>3-5 Years</option>
-
                         <option>5+ Years</option>
 
                     </select>
@@ -285,28 +235,18 @@ function InterviewSetup() {
 
                 {/* Interview Type */}
 
-                <div className="form-group">
+                <div className="input-box">
 
                     <label>Interview Type</label>
 
                     <select
-
                         value={interviewType}
-
-                        onChange={(e) =>
-
-                            setInterviewType(e.target.value)
-
-                        }
-
+                        onChange={(e) => setInterviewType(e.target.value)}
                     >
 
                         <option>Technical</option>
-
                         <option>HR</option>
-
                         <option>Behavioral</option>
-
                         <option>Aptitude</option>
 
                     </select>
@@ -315,86 +255,52 @@ function InterviewSetup() {
 
                 {/* Difficulty */}
 
-                <div className="form-group">
+                <div className="input-box">
 
                     <label>Difficulty</label>
 
                     <select
-
                         value={difficulty}
-
-                        onChange={(e) =>
-
-                            setDifficulty(e.target.value)
-
-                        }
-
+                        onChange={(e) => setDifficulty(e.target.value)}
                     >
 
                         <option>Easy</option>
-
                         <option>Medium</option>
-
                         <option>Hard</option>
 
                     </select>
 
                 </div>
 
-                {/* Resume */}
+                {/* Resume Upload */}
 
-                <div className="form-group">
+                <div className="upload-box">
 
                     <label>Upload Resume</label>
 
                     <input
-
                         type="file"
-
                         accept=".pdf,.doc,.docx"
-
                         onChange={handleResume}
-
                     />
 
-                </div>
+                    {resume && (
 
-                {/* Summary */}
+                        <div className="file-name">
 
-                <div className="summary-card">
+                            📄 {resume.name}
 
-                    <h3>📋 Interview Summary</h3>
+                        </div>
 
-                    <p><strong>Department:</strong> {department || "-"}</p>
-
-                    <p><strong>Role:</strong> {role || "-"}</p>
-
-                    <p><strong>Experience:</strong> {experience}</p>
-
-                    <p><strong>Interview Type:</strong> {interviewType}</p>
-
-                    <p><strong>Difficulty:</strong> {difficulty}</p>
-
-                    <p><strong>Questions:</strong> 10</p>
-
-                    <p><strong>Estimated Time:</strong> 20 Minutes</p>
-
-                    <p>
-
-                        <strong>Resume:</strong>{" "}
-
-                        {resume ? resume.name : "Not Uploaded"}
-
-                    </p>
+                    )}
 
                 </div>
+
+                {/* Start Button */}
 
                 <button
-
                     className="start-btn"
-
                     onClick={startInterview}
-
                 >
 
                     🚀 Start AI Interview
@@ -405,7 +311,8 @@ function InterviewSetup() {
 
         </div>
 
-    );
+    </div>
+);
 
 }
 
