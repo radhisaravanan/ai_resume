@@ -20,7 +20,6 @@ function Register() {
   const handleChange = (e) => {
     setForm({
       ...form,
-
       [e.target.name]: e.target.value,
     });
   };
@@ -30,7 +29,6 @@ function Register() {
 
     if (form.password !== form.confirmPassword) {
       alert("Passwords do not match");
-
       return;
     }
 
@@ -40,6 +38,8 @@ function Register() {
       const response = await API.post("/auth/register", {
         full_name: form.fullname,
         email: form.email,
+        phone: form.phone,
+        college: form.college,
         password: form.password,
       });
 
@@ -51,7 +51,11 @@ function Register() {
         alert(response.data.message);
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Registration Failed");
+      console.log(error);
+
+      alert(
+        error.response?.data?.message || error.message || "Registration Failed",
+      );
     } finally {
       setLoading(false);
     }
@@ -99,6 +103,7 @@ function Register() {
               placeholder="Phone Number"
               value={form.phone}
               onChange={handleChange}
+              required
             />
 
             <input
@@ -107,6 +112,7 @@ function Register() {
               placeholder="College Name"
               value={form.college}
               onChange={handleChange}
+              required
             />
 
             <input
