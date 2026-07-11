@@ -1,81 +1,56 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import Permission from "../pages/Permission";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Dashboard from "../pages/Dashboard";
-import UploadResume from "../pages/UploadResume";
-import ResumeAnalysis from "../pages/ResumeAnalysis";
-import Instructions from "../pages/Instructions";
-import InterviewSetup from "../pages/InterviewSetup";
-import Interview from "../pages/Interview";
-import Result from "../pages/Result";
-import History from "../pages/History";
 import Profile from "../pages/Profile";
-import About from "../pages/About";
-import Features from "../pages/Features";
-import Contact from "../pages/Contact";
-import NotFound from "../pages/NotFound";
-import InterviewHistory from "../pages/InterviewHistory";
-
+import InterviewSetup from "../pages/InterviewSetup";
+import InterviewRoom from "../pages/InterviewRoom";
+import Report from "../pages/Report";
+import History from "../pages/History";
+import ResumeAnalyzer from "../pages/ResumeAnalyzer";
 
 
 
 function AppRoutes() {
+  return (
+    <BrowserRouter>
+      <Routes>
 
-    return (
+        <Route path="/" element={<Home />} />
 
-        <BrowserRouter>
+        <Route path="/login" element={<Login />} />
 
-            <Routes>
+        <Route path="/register" element={<Register />} />
 
-                <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
 
-                <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
 
-                <Route path="/register" element={<Register />} />
+        <Route
+          path="/InterviewSetup"
+          element={<InterviewSetup />}
+        />
 
-                <Route path="/dashboard" element={<Dashboard />} />
-
-                <Route path="/upload-resume" element={<UploadResume />} />
-
-                <Route path="/resume-analysis" element={<ResumeAnalysis />} />
-
-                <Route path="/instructions" element={<Instructions />} />
-
-                <Route path="/interview-setup" element={<InterviewSetup />} />
-
-                <Route path="/interview" element={<Interview />} />
-
-                <Route path="/result" element={<Result />} />
-
-                <Route path="/history" element={<History />} />
-
-                <Route path="/profile" element={<Profile />} />
-
-                <Route path="/features" element={<Features />} />
-
-                <Route path="/about" element={<About />} />
-
-                <Route path="/contact" element={<Contact />} />
-
-                <Route path="*" element={<NotFound />} />
-
-
-
-<Route 
-path="/interview-history" 
-element={<InterviewHistory/>}
+      <Route path="/report" element={<Report />} />
+<Route
+path="/interview"
+element={<InterviewRoom />}
+/>
+   <Route path="/permission"
+    element={<Permission />}
 />
 
+<Route
+path="/resume"
+element={<ResumeAnalyzer />}
+/>
 
-
-            </Routes>
-
-        </BrowserRouter>
-
-    );
-
+<Route path="/history" element={<History />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default AppRoutes;
