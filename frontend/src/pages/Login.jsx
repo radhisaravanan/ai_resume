@@ -9,6 +9,7 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
@@ -23,11 +24,11 @@ function Login() {
       });
 
       if (response.data.success) {
+        // Save Token
         localStorage.setItem("token", response.data.token);
 
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-        }
+        // Save User
+        localStorage.setItem("user", JSON.stringify(response.data.user));
 
         alert("Login Successful");
 
@@ -36,10 +37,12 @@ function Login() {
         alert(response.data.message);
       }
     } catch (error) {
+      console.log(error);
+
       alert(error.response?.data?.message || "Login Failed");
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   return (

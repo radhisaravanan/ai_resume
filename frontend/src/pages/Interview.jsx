@@ -1,61 +1,75 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 import "../assets/css/interview.css";
 
 function Interview() {
+  const navigate = useNavigate();
 
-  const questions = [
-    "Tell me about yourself.",
-    "Explain your final year project.",
-    "Why do you want this job?",
-    "What are your strengths?",
-    "Where do you see yourself in five years?"
-  ];
+  const sessionId = localStorage.getItem("sessionId");
 
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [question, setQuestion] = useState("");
+  const [questionId, setQuestionId] = useState(null);
   const [answer, setAnswer] = useState("");
   const [time, setTime] = useState(1200);
   const [isListening, setIsListening] = useState(false);
 
   const recognitionRef = useRef(null);
 
-  // -----------------------------
-  // Countdown Timer
-  // -----------------------------
+  // ===============================
+  // Load Question
+  // ===============================
+  const loadQuestion = async () => {
+    try {
+      const res = await API.get(`/interview/question/${sessionId}`);
+
+      if (res.data.success) {
+        setQuestion(res.data.question.question);
+        setQuestionId(res.data.question.id);
+
+        speakQuestion(res.data.question.question);
+      } else {
+        alert("Interview Completed");
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Unable to load question");
+    }
+  };
+
   useEffect(() => {
+    loadQuestion();
+  }, []);
 
+  // ===============================
+  // Timer
+  // ===============================
+  useEffect(() => {
     const timer = setInterval(() => {
-
       setTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
 
-        if (prev > 0) return prev - 1;
+          alert("Interview Completed");
 
-        clearInterval(timer);
+          navigate("/dashboard");
 
-        alert("Interview Time Finished");
+          return 0;
+        }
 
-        return 0;
-
+        return prev - 1;
       });
-
     }, 1000);
 
     return () => clearInterval(timer);
-
   }, []);
 
-  // -----------------------------
-  // Speak Question Automatically
-  // -----------------------------
-  useEffect(() => {
-
-    speakQuestion(questions[currentQuestion]);
-
-  }, [currentQuestion]);
-
-  // -----------------------------
+  // ===============================
   // Text To Speech
-  // -----------------------------
+  // ===============================
   const speakQuestion = (text) => {
+    if (!text) return;
 
     window.speechSynthesis.cancel();
 
@@ -64,257 +78,160 @@ function Interview() {
     speech.lang = "en-US";
     speech.rate = 1;
     speech.pitch = 1;
-    speech.volume = 1;
 
     window.speechSynthesis.speak(speech);
-
   };
 
-  // -----------------------------
-  // Speech Recognition Setup
-  // -----------------------------
+  // ===============================
+  // Initialize Speech Recognition
+  // ===============================
   useEffect(() => {
-
     const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-
-      alert("Speech Recognition is not supported in your browser.");
-
+      alert("Speech Recognition is not supported.");
       return;
     }
 
     const recognition = new SpeechRecognition();
 
+    recognition.lang = "en-US";
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
 
     recognition.onstart = () => {
-
+      console.log("Recording Started");
       setIsListening(true);
-
-    };
-
-    recognition.onend = () => {
-
-      setIsListening(false);
-
-    };
-
-    recognition.onerror = (event) => {
-
-      console.log(event.error);
-
-      setIsListening(false);
-
     };
 
     recognition.onresult = (event) => {
-
       let transcript = "";
 
-      for (
-        let i = event.resultIndex;
-        i < event.results.length;
-        i++
-      ) {
-
+      for (let i = event.resultIndex; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
-
       }
 
       setAnswer(transcript);
+    };
 
+    recognition.onerror = (event) => {
+      console.log(event.error);
+      alert("Speech Error : " + event.error);
+    };
+
+    recognition.onend = () => {
+      console.log("Recording Stopped");
+      setIsListening(false);
     };
 
     recognitionRef.current = recognition;
-
   }, []);
 
-  // -----------------------------
+  // ===============================
   // Start Recording
-  // -----------------------------
+  // ===============================
   const startRecording = () => {
-
-    if (recognitionRef.current) {
-
-      recognitionRef.current.start();
-
-    }
-
-  };
-
-  // -----------------------------
-  // Stop Recording
-  // -----------------------------
-  const stopRecording = () => {
-
-    if (recognitionRef.current) {
-
-      recognitionRef.current.stop();
-
-    }
-
-  };
-
-  // -----------------------------
-  // Submit Answer
-  // -----------------------------
-  const submitAnswer = () => {
-
-    if (answer.trim() === "") {
-
-      alert("Please answer the question.");
-
+    if (!recognitionRef.current) {
+      alert("Speech Recognition Not Available");
       return;
+    }
 
+    try {
+      recognitionRef.current.start();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // ===============================
+  // Stop Recording
+  // ===============================
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+
+    setIsListening(false);
+  };
+
+  // ===============================
+  // Submit Answer
+  // ===============================
+  const submitAnswer = async () => {
+    if (answer.trim() === "") {
+      alert("Please answer the question.");
+      return;
     }
 
     stopRecording();
 
-    if (currentQuestion < questions.length - 1) {
+    try {
+      const res = await API.post("/interview/answer", {
+        session_id: sessionId,
+        question_id: questionId,
+        answer,
+      });
 
-      setCurrentQuestion(currentQuestion + 1);
+      if (res.data.success) {
+        setAnswer("");
 
-      setAnswer("");
-
-    } else {
-
-      window.speechSynthesis.cancel();
-
-      alert("Interview Completed Successfully!");
-
+        loadQuestion();
+      } else {
+        alert(res.data.message);
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Unable to save answer");
     }
-
   };
 
   const minutes = Math.floor(time / 60);
   const seconds = time % 60;
 
   return (
-
     <div className="interview-page">
-
       <div className="interview-card">
-
-        {/* Header */}
-
         <div className="header">
-
           <h2>🤖 AI Interview Assistant</h2>
 
           <h3>
             {minutes}:{seconds.toString().padStart(2, "0")}
           </h3>
-
         </div>
-
-        {/* Progress */}
-
-        <div className="progress">
-
-          <div
-            className="progress-bar"
-            style={{
-              width: `${((currentQuestion + 1) / questions.length) * 100}%`
-            }}
-          ></div>
-
-        </div>
-
-        <h4>
-
-          Question {currentQuestion + 1} of {questions.length}
-
-        </h4>
-
-        {/* Question */}
 
         <div className="question-box">
-
-          {questions[currentQuestion]}
-
+          <h3>{question || "Loading Question..."}</h3>
         </div>
 
-        {/* Speak Again */}
-
-        <button
-          className="speak-btn"
-          onClick={() => speakQuestion(questions[currentQuestion])}
-        >
-
+        <button className="speak-btn" onClick={() => speakQuestion(question)}>
           🔊 Listen Again
-
         </button>
-
-        {/* Answer */}
 
         <textarea
-          placeholder="Your voice will appear here..."
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          placeholder="Speak or type your answer..."
         />
 
-        {/* Microphone */}
-
         <div className="button-group">
-
           {!isListening ? (
-
-            <button
-              className="mic-btn"
-              onClick={startRecording}
-            >
-
-              🎤 Start Recording
-
+            <button className="mic-btn" onClick={startRecording}>
+              🎤 Start Speaking
             </button>
-
           ) : (
-
-            <button
-              className="stop-btn"
-              onClick={stopRecording}
-            >
-
-              ⏹ Stop Recording
-
+            <button className="stop-btn" onClick={stopRecording}>
+              ⏹ Stop Speaking
             </button>
-
           )}
 
+          <button className="submit-btn" onClick={submitAnswer}>
+            Next Question
+          </button>
         </div>
-
-        {/* Status */}
-
-        <p className="record-status">
-
-          {isListening
-            ? "🎙 Listening..."
-            : "Microphone is Off"}
-
-        </p>
-
-        {/* Submit */}
-
-        <button
-          className="submit-btn"
-          onClick={submitAnswer}
-        >
-
-          Submit Answer
-
-        </button>
-
       </div>
-
     </div>
-
   );
-
 }
 
 export default Interview;
