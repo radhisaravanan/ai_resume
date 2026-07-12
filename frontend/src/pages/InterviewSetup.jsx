@@ -6,304 +6,218 @@ function InterviewSetup() {
 
     const navigate = useNavigate();
 
-    const roleData = {
+    const [form, setForm] = useState({
 
-        "Computer Science": [
-            "Frontend Developer",
-            "Backend Developer",
-            "React Developer",
-            "Full Stack Developer",
-            "Java Developer",
-            "Python Developer",
-            "PHP Developer",
-            "Node.js Developer",
-            "Software Engineer",
-            "AI Engineer",
-            "Data Scientist"
-        ],
+        domain: "",
 
-        "Information Technology": [
-            "System Administrator",
-            "Cloud Engineer",
-            "DevOps Engineer",
-            "Network Engineer",
-            "Technical Support Engineer"
-        ],
+        company: "",
 
-        "Artificial Intelligence": [
-            "Machine Learning Engineer",
-            "AI Engineer",
-            "Deep Learning Engineer",
-            "NLP Engineer"
-        ],
+        role: "",
 
-        "Cyber Security": [
-            "Security Analyst",
-            "Ethical Hacker",
-            "SOC Analyst",
-            "Penetration Tester"
-        ],
+        difficulty: "",
 
-        "Data Science": [
-            "Data Scientist",
-            "Data Analyst",
-            "Business Intelligence Developer"
-        ],
+        experience: "",
 
-        "Electronics": [
-            "Embedded Engineer",
-            "VLSI Engineer",
-            "PCB Design Engineer"
-        ],
+        questions: "5",
 
-        "Mechanical": [
-            "Design Engineer",
-            "Production Engineer",
-            "Quality Engineer"
-        ],
+        language: "English",
 
-        "Civil": [
-            "Site Engineer",
-            "Structural Engineer"
-        ],
+        interviewType: "Voice"
 
-        "MBA": [
-            "HR Executive",
-            "Business Analyst",
-            "Marketing Executive",
-            "Sales Executive",
-            "Project Manager"
-        ]
+    });
 
-    };
+    const handleChange = (e) => {
 
-    const [department, setDepartment] = useState("");
-    const [role, setRole] = useState("");
-    const [experience, setExperience] = useState("Fresher");
-    const [difficulty, setDifficulty] = useState("Easy");
-    const [interviewType, setInterviewType] = useState("Technical");
-    const [resume, setResume] = useState(null);
+        setForm({
 
-    const handleResume = (e) => {
+            ...form,
 
-        if (e.target.files.length > 0) {
-
-            setResume(e.target.files[0]);
-
-        }
-
-    };
-
-    const startInterview = () => {
-
-        if (!department) {
-
-            alert("Please select a department.");
-
-            return;
-
-        }
-
-        if (!role) {
-
-            alert("Please select a job role.");
-
-            return;
-
-        }
-
-        if (!resume) {
-
-            alert("Please upload your resume.");
-
-            return;
-
-        }
-
-        navigate("/interview", {
-
-            state: {
-
-                department,
-                role,
-                experience,
-                difficulty,
-                interviewType,
-                resumeName: resume.name
-
-            }
+            [e.target.name]: e.target.value
 
         });
 
     };
 
- 
-return (
-    <div className="setup-page">
+    const startInterview = () => {
 
-        <div className="setup-container">
+        navigate("/permission");
 
-            <div className="setup-form">
+    };
 
-                <div className="page-title">
+    return (
 
-                    <img
-                        src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png"
-                        alt="AI Interview"
-                        className="setup-image"
-                    />
+        <div className="setup-page">
 
-                    <h1> AI Interview </h1>
+            <div className="setup-card">
 
-                
+                <h1>AI Mock Interview Setup</h1>
 
-                </div>
+                <p>
+                    Configure your interview before starting.
+                </p>
 
-                {/* Department */}
+                <div className="form-group">
 
-                <div className="input-box">
-
-                    <label>Department</label>
+                    <label>Domain</label>
 
                     <select
-                        value={department}
-                        onChange={(e) => {
-                            setDepartment(e.target.value);
-                            setRole("");
-                        }}
+                        name="domain"
+                        onChange={handleChange}
                     >
-                        <option value="">Select Department</option>
 
-                        {Object.keys(roleData).map((dept) => (
+                        <option>Select Domain</option>
 
-                            <option key={dept} value={dept}>
-                                {dept}
-                            </option>
+                        <option>Web Development</option>
 
-                        ))}
+                        <option>Java</option>
+
+                        <option>Python</option>
+
+                        <option>Data Science</option>
+
+                        <option>Artificial Intelligence</option>
 
                     </select>
 
                 </div>
 
-                {/* Job Role */}
+                <div className="form-group">
 
-                <div className="input-box">
+                    <label>Company</label>
+
+                    <select
+                        name="company"
+                        onChange={handleChange}
+                    >
+
+                        <option>Google</option>
+
+                        <option>Amazon</option>
+
+                        <option>Microsoft</option>
+
+                        <option>Zoho</option>
+
+                        <option>TCS</option>
+
+                        <option>Infosys</option>
+
+                    </select>
+
+                </div>
+
+                <div className="form-group">
 
                     <label>Job Role</label>
 
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        disabled={!department}
-                    >
-
-                        <option value="">Select Job Role</option>
-
-                        {department &&
-                            roleData[department].map((job) => (
-
-                                <option key={job} value={job}>
-                                    {job}
-                                </option>
-
-                            ))}
-
-                    </select>
+                    <input
+                        type="text"
+                        name="role"
+                        placeholder="Frontend Developer"
+                        onChange={handleChange}
+                    />
 
                 </div>
 
-                {/* Experience */}
-
-                <div className="input-box">
-
-                    <label>Experience</label>
-
-                    <select
-                        value={experience}
-                        onChange={(e) => setExperience(e.target.value)}
-                    >
-
-                        <option>Fresher</option>
-                        <option>1-2 Years</option>
-                        <option>3-5 Years</option>
-                        <option>5+ Years</option>
-
-                    </select>
-
-                </div>
-
-                {/* Interview Type */}
-
-                <div className="input-box">
-
-                    <label>Interview Type</label>
-
-                    <select
-                        value={interviewType}
-                        onChange={(e) => setInterviewType(e.target.value)}
-                    >
-
-                        <option>Technical</option>
-                        <option>HR</option>
-                        <option>Behavioral</option>
-                        <option>Aptitude</option>
-
-                    </select>
-
-                </div>
-
-                {/* Difficulty */}
-
-                <div className="input-box">
+                <div className="form-group">
 
                     <label>Difficulty</label>
 
                     <select
-                        value={difficulty}
-                        onChange={(e) => setDifficulty(e.target.value)}
+                        name="difficulty"
+                        onChange={handleChange}
                     >
 
                         <option>Easy</option>
+
                         <option>Medium</option>
+
                         <option>Hard</option>
 
                     </select>
 
                 </div>
 
-                {/* Resume Upload */}
+                <div className="form-group">
 
-                <div className="upload-box">
+                    <label>Experience</label>
 
-                    <label>Upload Resume</label>
+                    <select
+                        name="experience"
+                        onChange={handleChange}
+                    >
 
-                    <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleResume}
-                    />
+                        <option>Fresher</option>
 
-                    {resume && (
+                        <option>1 Year</option>
 
-                        <div className="file-name">
+                        <option>2 Years</option>
 
-                            📄 {resume.name}
+                        <option>3+ Years</option>
 
-                        </div>
-
-                    )}
+                    </select>
 
                 </div>
 
-                {/* Start Button */}
+                <div className="form-group">
+
+                    <label>Questions</label>
+
+                    <select
+                        name="questions"
+                        onChange={handleChange}
+                    >
+
+                        <option>5</option>
+
+                        <option>10</option>
+
+                        <option>15</option>
+
+                    </select>
+
+                </div>
+
+                <div className="form-group">
+
+                    <label>Language</label>
+
+                    <select
+                        name="language"
+                        onChange={handleChange}
+                    >
+
+                        <option>English</option>
+
+                        <option>Tamil</option>
+
+                    </select>
+
+                </div>
+
+                <div className="form-group">
+
+                    <label>Interview Type</label>
+
+                    <select
+                        name="interviewType"
+                        onChange={handleChange}
+                    >
+
+                        <option>Voice</option>
+
+                        <option>Text</option>
+
+                    </select>
+
+                </div>
 
                 <button
-                    className="start-btn"
+                    className="start-button"
                     onClick={startInterview}
                 >
 
-                    🚀 Start AI Interview
+                    Start Interview
 
                 </button>
 
@@ -311,8 +225,7 @@ return (
 
         </div>
 
-    </div>
-);
+    );
 
 }
 
