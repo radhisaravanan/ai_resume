@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 import API from "../services/api";
 
@@ -124,6 +125,7 @@ const startInterview = async () => {
             <h2>Recent Interviews</h2>
 
             <table className="recent-table">
+
               <thead>
                 <tr>
                   <th>Company</th>

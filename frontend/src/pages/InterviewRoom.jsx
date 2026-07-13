@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FaMicrophone,
-  FaStop,
-  FaVideo,
-  FaClock,
-} from "react-icons/fa";
-import "../assets/css/interviewRoom.css";
+import { FaMicrophone, FaStop, FaVideo, FaClock } from "react-icons/fa";
 
+import API from "../services/api";
+
+import "../assets/css/interviewRoom.css";
 function InterviewRoom() {
   const navigate = useNavigate();
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const recognitionRef = useRef(null);
+  const sessionId = localStorage.getItem("sessionId");
+
+  const [question, setQuestion] = useState(null);
+
+  const [questionId, setQuestionId] = useState(null);
+
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const questions = [
     "Tell me about yourself.",
@@ -28,13 +32,19 @@ function InterviewRoom() {
   const [timer, setTimer] = useState(60);
   const [listening, setListening] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
+
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  const [uploading, setUploading] = useState(false);
   /* ==========================
       START CAMERA
   ========================== */
 
-  useEffect(() => {
-    startCamera();
-  }, []);
+ useEffect(() => {
+   startCamera();
+   loadQuestion();
+ }, []);
 
   const startCamera = async () => {
     try {
@@ -53,6 +63,27 @@ function InterviewRoom() {
     } catch (err) {
       console.log(err);
       alert("Camera permission denied.");
+    }
+  };
+  const loadQuestion = async () => {
+    try {
+      const response = await API.get(`/interview/question/${sessionId}`);
+
+      if (response.data.completed) {
+        navigate("/report");
+        return;
+      }
+
+      if (response.data.success) {
+        setQuestion(response.data.question.question);
+        setQuestionId(response.data.question.id);
+
+        setTranscript("");
+        setTimer(60);
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Unable to load question");
     }
   };
 
@@ -151,11 +182,25 @@ function InterviewRoom() {
     };
 
     recognition.start();
+    // Start Audio Recording
+
+    audioChunksRef.current = [];
+
+    const mediaRecorder = new MediaRecorder(streamRef.current);
+
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunksRef.current.push(event.data);
+    };
+
+    mediaRecorder.start();
+
+    mediaRecorderRef.current = mediaRecorder;
 
     recognitionRef.current = recognition;
-  };
+  };;
 
-  const stopListening = () => {
+  const stopListening = async () => {
+    // Stop Speech Recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current.abort();
@@ -163,28 +208,94 @@ function InterviewRoom() {
     }
 
     setListening(false);
+
+    // Stop Audio Recording
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+
+        const formData = new FormData();
+
+        formData.append("audio", audioBlob, "answer.webm");
+
+        formData.append("user_id", JSON.parse(localStorage.getItem("user")).id);
+
+        formData.append("question_id", currentQuestion + 1);
+
+        try {
+          setUploading(true);
+
+          const response = await API.post("/voice/upload", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+
+          console.log(response.data);
+
+          if (response.data.success) {
+            // Replace browser transcript with Whisper transcript
+            setTranscript(response.data.answer);
+
+            // Save answer_id for evaluation later
+            localStorage.setItem("answer_id", response.data.answer_id);
+          }
+        } catch (err) {
+          console.log(err);
+
+          alert("Audio upload failed");
+        }
+
+        setUploading(false);
+      };
+    }
   };
   /* ==========================
       NEXT QUESTION
   ========================== */
 
-  const nextQuestion = () => {
-    stopListening();
+ const nextQuestion = async () => {
+   stopListening();
 
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-      setTranscript("");
-      setTimer(60);
-    } else {
-      stopListening();
-      stopCamera();
+   const answerId = localStorage.getItem("answer_id");
 
-      alert("Interview Completed!");
+   if (answerId) {
+     try {
+       const response = await API.post("/evaluation/check", {
+         answer_id: answerId,
+       });
 
-      navigate("/report");
-    }
-  };
+       console.log("Evaluation:", response.data);
 
+       localStorage.setItem(
+         "lastEvaluation",
+         JSON.stringify(response.data.evaluation),
+       );
+     } catch (err) {
+       console.log(err);
+
+       alert("Evaluation failed");
+     }
+   }
+
+   if (currentQuestion < questions.length - 1) {
+     setCurrentQuestion((prev) => prev + 1);
+
+     setTranscript("");
+
+     setTimer(60);
+
+     localStorage.removeItem("answer_id");
+   } else {
+     stopCamera();
+
+     navigate("/report");
+   }
+ };
   /* ==========================
       CLEANUP
   ========================== */
@@ -197,42 +308,27 @@ function InterviewRoom() {
   }, []);
   return (
     <div className="interview-page">
-
       {/* Left Panel */}
       <div className="left-panel">
-
         <h2>
           <FaVideo /> Live Camera
         </h2>
 
         <div className="camera-box">
-
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-          />
+          <video ref={videoRef} autoPlay playsInline muted />
 
           <div className="camera-status">
             {cameraOn ? (
-              <span className="camera-on">
-                🟢 Camera on radhii
-              </span>
+              <span className="camera-on">🟢 Camera on radhii</span>
             ) : (
-              <span className="camera-off">
-                🔴 Camera OFF
-              </span>
+              <span className="camera-off">🔴 Camera OFF</span>
             )}
           </div>
-
         </div>
-
       </div>
 
       {/* Right Panel */}
       <div className="right-panel">
-
         <h1>AI Interview</h1>
 
         <div className="timer">
@@ -240,17 +336,12 @@ function InterviewRoom() {
         </div>
 
         <div className="question-box">
+          <h2>Question {currentQuestion + 1} of 5</h2>
 
-          <h2>
-            Question {currentQuestion + 1} of {questions.length}
-          </h2>
-
-          <p>{questions[currentQuestion]}</p>
-
+          <p>{question}</p>
         </div>
 
         <div className="answer-box">
-
           <h3>Your Answer</h3>
 
           <textarea
@@ -258,25 +349,19 @@ function InterviewRoom() {
             placeholder="Your spoken answer will appear here..."
             readOnly
           />
-
         </div>
 
         <div className="status-box">
-
-          {listening ? (
-            <span className="recording">
-              🔴 Recording...
-            </span>
+          {uploading ? (
+            <span className="recording">⏳ Uploading Answer...</span>
+          ) : listening ? (
+            <span className="recording">🔴 Recording...</span>
           ) : (
-            <span className="not-recording">
-              🎤 Microphone Ready
-            </span>
+            <span className="not-recording">🎤 Microphone Ready</span>
           )}
-
         </div>
 
         <div className="buttons">
-
           <button
             className={`mic-btn ${listening ? "active" : ""}`}
             onClick={startListening}
@@ -295,19 +380,13 @@ function InterviewRoom() {
             <FaStop />
           </button>
 
-          <button
-            className="next-btn"
-            onClick={nextQuestion}
-          >
+          <button className="next-btn" onClick={nextQuestion}>
             {currentQuestion === questions.length - 1
               ? "Finish Interview"
               : "Next Question"}
           </button>
-
         </div>
-
       </div>
-
     </div>
   );
 }
