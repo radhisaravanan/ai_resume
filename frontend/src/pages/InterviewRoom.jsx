@@ -217,7 +217,7 @@ function InterviewRoom() {
           <div className="camera-status">
             {cameraOn ? (
               <span className="camera-on">
-                🟢 Camera ON
+                🟢 Camera on radhii
               </span>
             ) : (
               <span className="camera-off">
