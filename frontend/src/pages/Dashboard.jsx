@@ -10,30 +10,40 @@ import {
 } from "react-icons/fa";
 
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+
 
 function Dashboard() {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const startInterview = async () => {
+const startInterview = async () => {
+
     try {
-      const response = await API.post("/interview/start");
 
-      if (response.data.success) {
-        localStorage.setItem("sessionId", response.data.sessionId);
+        const response = await API.post("/interview/start");
 
-        navigate("/interview");
-      } else {
-        alert(response.data.message);
-      }
-    } catch (error) {
-      console.log(error);
+        if(response.data.success){
 
-      alert(error.response?.data?.message || "Unable to start interview");
+            localStorage.setItem(
+                "sessionId",
+                response.data.sessionId
+            );
+
+            navigate("/setup");
+
+        }
+
     }
-  };
+    catch(error){
+
+        console.log(error);
+
+        alert("Unable to start interview");
+
+    }
+
+};
 
   return (
     <div className="dashboard">

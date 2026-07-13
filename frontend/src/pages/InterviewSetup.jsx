@@ -1,32 +1,69 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
+import {
+    FaPlay
+} from "react-icons/fa";
+
 import "../assets/css/interviewSetup.css";
+
 
 function InterviewSetup() {
 
+
     const navigate = useNavigate();
+
+    const location = useLocation();
+
+
+    // Data coming from ResumeAnalyzer
+
+    const resumeData = location.state;
+
+
 
     const [form, setForm] = useState({
 
+
+        
+
+
+        analysis: resumeData?.analysis || null,
+
+
+        department: "",
+
+
         domain: "",
+
 
         company: "",
 
-        role: "",
 
-        difficulty: "",
+        role: "",
 
         experience: "",
 
+
         questions: "5",
+
 
         language: "English",
 
-        interviewType: "Voice"
+
+        
+
 
     });
 
-    const handleChange = (e) => {
+
+
+
+
+
+
+    const handleChange = (e)=>{
+
 
         setForm({
 
@@ -36,197 +73,487 @@ function InterviewSetup() {
 
         });
 
-    };
-
-    const startInterview = () => {
-
-        navigate("/permission");
 
     };
+const handleResume = (e)=>{
 
-    return (
+    const file = e.target.files[0];
+
+    if(file){
+
+        setForm({
+
+            ...form,
+
+            resume:file
+
+        });
+
+    }
+
+};
+
+
+
+
+
+
+    const startInterview = ()=>{
+
+
+    if(!form.resume){
+
+        alert("Please upload resume");
+
+        return;
+
+    }
+
+
+    if(!form.department){
+
+        alert("Please select department");
+
+        return;
+
+    }
+
+
+    if(!form.role){
+
+        alert("Please enter job role");
+
+        return;
+
+    }
+
+
+
+    navigate("/interview",{
+
+        state:form
+
+    });
+
+
+};
+
+
+
+
+
+
+
+
+    return(
+
 
         <div className="setup-page">
 
+
             <div className="setup-card">
 
-                <h1>AI Mock Interview Setup</h1>
 
-                <p>
-                    Configure your interview before starting.
-                </p>
+
+                <h1>
+                 Smart Interview Setup
+                </h1>
+
+
+                {/* Department */}
+
 
                 <div className="form-group">
 
-                    <label>Domain</label>
+
+                    <label>
+                        Department
+                    </label>
+
+
 
                     <select
+
+                        name="department"
+
+                        value={form.department}
+
+                        onChange={handleChange}
+
+                    >
+
+
+                        <option value="">
+                            Select Department
+                        </option>
+
+
+                        <option>
+                            Computer Science
+                        </option>
+
+
+                        <option>
+                            Information Technology
+                        </option>
+
+
+                        <option>
+                            Electronics
+                        </option>
+
+
+                        <option>
+                            Mechanical
+                        </option>
+
+
+
+                    </select>
+
+
+
+                </div>
+
+
+                {/* Domain */}
+
+
+                <div className="form-group">
+
+
+                    <label>
+                        Domain
+                    </label>
+
+
+
+                    <select
+
                         name="domain"
+
+                        value={form.domain}
+
                         onChange={handleChange}
+
                     >
 
-                        <option>Select Domain</option>
 
-                        <option>Web Development</option>
+                        <option value="">
+                            Select Domain
+                        </option>
 
-                        <option>Java</option>
 
-                        <option>Python</option>
+                        <option>
+                            Web Development
+                        </option>
 
-                        <option>Data Science</option>
 
-                        <option>Artificial Intelligence</option>
+                        <option>
+                            Java
+                        </option>
+
+
+                        <option>
+                            Python
+                        </option>
+
+
+                        <option>
+                            Data Science
+                        </option>
+
+
+                        <option>
+                            Artificial Intelligence
+                        </option>
+
+
 
                     </select>
 
-                </div>
-
-                <div className="form-group">
-
-                    <label>Company</label>
-
-                    <select
-                        name="company"
-                        onChange={handleChange}
-                    >
-
-                        <option>Google</option>
-
-                        <option>Amazon</option>
-
-                        <option>Microsoft</option>
-
-                        <option>Zoho</option>
-
-                        <option>TCS</option>
-
-                        <option>Infosys</option>
-
-                    </select>
 
                 </div>
 
+
+
+                {/* Role */}
+
+
                 <div className="form-group">
 
-                    <label>Job Role</label>
+
+                    <label>
+                        Job Role
+                    </label>
+
 
                     <input
+
                         type="text"
+
                         name="role"
+
+                        value={form.role}
+
                         placeholder="Frontend Developer"
+
                         onChange={handleChange}
+
                     />
 
-                </div>
 
-                <div className="form-group">
-
-                    <label>Difficulty</label>
-
-                    <select
-                        name="difficulty"
-                        onChange={handleChange}
-                    >
-
-                        <option>Easy</option>
-
-                        <option>Medium</option>
-
-                        <option>Hard</option>
-
-                    </select>
 
                 </div>
 
+
+
+                {/* Experience */}
+
+
                 <div className="form-group">
 
-                    <label>Experience</label>
+
+                    <label>
+                        Experience
+                    </label>
+
 
                     <select
+
                         name="experience"
+
+                        value={form.experience}
+
                         onChange={handleChange}
+
                     >
 
-                        <option>Fresher</option>
 
-                        <option>1 Year</option>
+                        <option>
+                            Fresher
+                        </option>
 
-                        <option>2 Years</option>
 
-                        <option>3+ Years</option>
+                        <option>
+                            1 Year
+                        </option>
+
+
+                        <option>
+                            2 Years
+                        </option>
+
+
+                        <option>
+                            3+ Years
+                        </option>
+
 
                     </select>
 
+
                 </div>
+
+
+
+                {/* Questions */}
+
 
                 <div className="form-group">
 
-                    <label>Questions</label>
+
+                    <label>
+                        Questions
+                    </label>
+
 
                     <select
+
                         name="questions"
+
+                        value={form.questions}
+
                         onChange={handleChange}
+
                     >
 
-                        <option>5</option>
 
-                        <option>10</option>
+                        <option>
+                            5
+                        </option>
 
-                        <option>15</option>
+
+                        <option>
+                            10
+                        </option>
+
+
+                        <option>
+                            15
+                        </option>
+
 
                     </select>
 
+
                 </div>
+
+                {/* Language */}
+
 
                 <div className="form-group">
 
-                    <label>Language</label>
+
+                    <label>
+                        Language
+                    </label>
+
 
                     <select
+
                         name="language"
+
+                        value={form.language}
+
                         onChange={handleChange}
+
                     >
 
-                        <option>English</option>
 
-                        <option>Tamil</option>
+                        <option>
+                            English
+                        </option>
+
+
+                        <option>
+                            Tamil
+                        </option>
+
 
                     </select>
 
-                </div>
-
-                <div className="form-group">
-
-                    <label>Interview Type</label>
-
-                    <select
-                        name="interviewType"
-                        onChange={handleChange}
-                    >
-
-                        <option>Voice</option>
-
-                        <option>Text</option>
-
-                    </select>
 
                 </div>
+
+
+
+
+
+
+ {/* Resume Analysis */}
+
+
+                {
+
+                    form.analysis &&
+
+
+                    <div className="analysis-box">
+
+
+                        <h3>
+                            Resume Analysis
+                        </h3>
+
+
+                        <p>
+                            ATS Score : {form.analysis.ats}%
+                        </p>
+
+
+                        <p>
+                            Resume Match : {form.analysis.match}%
+                        </p>
+
+
+                    </div>
+
+
+                }
+
+
+
+
+{/* Resume Upload */}
+
+<div className="form-group">
+
+<label>
+    Resume
+</label>
+
+
+<div className="resume-upload">
+
+
+<input
+
+type="file"
+
+accept=".pdf,.doc,.docx"
+
+onChange={handleResume}
+
+/>
+
+
+</div>
+
+
+{
+form.resume &&
+
+<p>
+✅ {form.resume.name}
+</p>
+
+}
+
+
+</div>
+
+
+
+
+
+
+
 
                 <button
+
                     className="start-button"
+
                     onClick={startInterview}
+
                 >
+
+
+                    <FaPlay/>
+
 
                     Start Interview
 
+
                 </button>
+
+
+
+
+
+
 
             </div>
 
+
         </div>
+
 
     );
 
+
+
 }
+
 
 export default InterviewSetup;

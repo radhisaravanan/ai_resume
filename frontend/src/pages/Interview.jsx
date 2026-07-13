@@ -38,9 +38,9 @@ function Interview() {
     }
   };
 
-  useEffect(() => {
-    loadQuestion();
-  }, []);
+  // useEffect(() => {
+  //   loadQuestion();
+  // }, []);
 
   // ===============================
   // Timer
