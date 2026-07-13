@@ -11,6 +11,8 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
+import API from "../services/api";
+
 
 function Dashboard() {
   const navigate = useNavigate();
