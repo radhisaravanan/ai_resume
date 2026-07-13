@@ -28,7 +28,6 @@ function InterviewRoom() {
   const [timer, setTimer] = useState(60);
   const [listening, setListening] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
-
   /* ==========================
       START CAMERA
   ========================== */
@@ -75,7 +74,7 @@ function InterviewRoom() {
   };
 
   /* ==========================
-        TIMER
+      TIMER
   ========================== */
 
   useEffect(() => {
@@ -198,27 +197,42 @@ function InterviewRoom() {
   }, []);
   return (
     <div className="interview-page">
+
       {/* Left Panel */}
       <div className="left-panel">
+
         <h2>
           <FaVideo /> Live Camera
         </h2>
 
         <div className="camera-box">
-          <video ref={videoRef} autoPlay playsInline muted />
+
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+          />
 
           <div className="camera-status">
             {cameraOn ? (
-              <span className="camera-on">🟢 Camera ON</span>
+              <span className="camera-on">
+                🟢 Camera ON
+              </span>
             ) : (
-              <span className="camera-off">🔴 Camera OFF</span>
+              <span className="camera-off">
+                🔴 Camera OFF
+              </span>
             )}
           </div>
+
         </div>
+
       </div>
 
       {/* Right Panel */}
       <div className="right-panel">
+
         <h1>AI Interview</h1>
 
         <div className="timer">
@@ -226,14 +240,17 @@ function InterviewRoom() {
         </div>
 
         <div className="question-box">
+
           <h2>
             Question {currentQuestion + 1} of {questions.length}
           </h2>
 
           <p>{questions[currentQuestion]}</p>
+
         </div>
 
         <div className="answer-box">
+
           <h3>Your Answer</h3>
 
           <textarea
@@ -241,17 +258,25 @@ function InterviewRoom() {
             placeholder="Your spoken answer will appear here..."
             readOnly
           />
+
         </div>
 
         <div className="status-box">
+
           {listening ? (
-            <span className="recording">🔴 Recording...</span>
+            <span className="recording">
+              🔴 Recording...
+            </span>
           ) : (
-            <span className="not-recording">🎤 Microphone Ready</span>
+            <span className="not-recording">
+              🎤 Microphone Ready
+            </span>
           )}
+
         </div>
 
         <div className="buttons">
+
           <button
             className={`mic-btn ${listening ? "active" : ""}`}
             onClick={startListening}
@@ -270,13 +295,19 @@ function InterviewRoom() {
             <FaStop />
           </button>
 
-          <button className="next-btn" onClick={nextQuestion}>
+          <button
+            className="next-btn"
+            onClick={nextQuestion}
+          >
             {currentQuestion === questions.length - 1
               ? "Finish Interview"
               : "Next Question"}
           </button>
+
         </div>
+
       </div>
+
     </div>
   );
 }
