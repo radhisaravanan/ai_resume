@@ -15,7 +15,7 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 
-import { SiZoho } from "react-icons/si";
+
 
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
@@ -308,7 +308,19 @@ function Dashboard() {
 
         {/* ================= AI SUGGESTIONS ================= */}
 
+<<<<<<< HEAD
         <div className="dashboard-card">
+=======
+            <table className="recent-table">
+
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Role</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+>>>>>>> 51633786282036a2ae515eef7ee5bcfc16652592
 
           <div className="card-header">
 
