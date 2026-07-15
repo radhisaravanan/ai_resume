@@ -1,95 +1,125 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 import {
-
-FaHome,
-
-FaUser,
-
-FaRobot,
-
-FaHistory,
-
-FaChartBar,
-
-FaCog,
-
-FaSignOutAlt
-
+  FaHome,
+  FaUser,
+  FaRobot,
+  FaHistory,
+  FaChartBar,
+  FaCog,
+  FaSignOutAlt,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 
-function Sidebar(){
+import "../assets/css/sidebar.css";
 
-return(
+function Sidebar() {
+  const location = useLocation();
 
-<div className="sidebar">
+  const [open, setOpen] = useState(true);
 
-<h2>
+  const menu = [
+    {
+      title: "Dashboard",
+      path: "/dashboard",
+      icon: <FaHome />,
+    },
+    {
+      title: "Profile",
+      path: "/profile",
+      icon: <FaUser />,
+    },
+    {
+      title: "Interview",
+      path: "/setup",
+      icon: <FaRobot />,
+    },
+    {
+      title: "History",
+      path: "/history",
+      icon: <FaHistory />,
+    },
+    {
+      title: "Report",
+      path: "/report",
+      icon: <FaChartBar />,
+    },
+    {
+      title: "Settings",
+      path: "/settings",
+      icon: <FaCog />,
+    },
+  ];
 
-AI Interview
+  return (
+    <>
+      {/* Toggle Button */}
 
-</h2>
+      <button
+        className="sidebar-toggle"
+        onClick={() => setOpen(!open)}
+      >
+        {open ? <FaTimes /> : <FaBars />}
+      </button>
 
-<Link to="/dashboard">
+      {/* Sidebar */}
 
-<FaHome/>
+      <aside className={open ? "sidebar open" : "sidebar"}>
 
-Dashboard
+        <div className="sidebar-logo">
 
-</Link>
+          <div className="logo-circle">🤖</div>
 
-<Link to="/profile">
+          {open && (
+            <div>
+              <h2>AI Interview</h2>
+              <p>Placement Portal</p>
+            </div>
+          )}
 
-<FaUser/>
+        </div>
 
-Profile
+        <nav className="sidebar-menu">
 
-</Link>
+          {menu.map((item) => (
 
-<Link to="/setup">
+            <Link
+              key={item.path}
+              to={item.path}
+              className={
+                location.pathname === item.path
+                  ? "menu-item active"
+                  : "menu-item"
+              }
+            >
+              <span className="menu-icon">
+                {item.icon}
+              </span>
 
-<FaRobot/>
+              {open && (
+                <span className="menu-text">
+                  {item.title}
+                </span>
+              )}
+            </Link>
 
-Interview
+          ))}
 
-</Link>
+        </nav>
 
-<Link to="/history">
+        <Link to="/" className="logout-btn">
 
-<FaHistory/>
+          <FaSignOutAlt />
 
-History
+          {open && <span>Logout</span>}
 
-</Link>
+        </Link>
 
-<Link to="/report">
-
-<FaChartBar/>
-
-Report
-
-</Link>
-
-<Link to="/settings">
-
-<FaCog/>
-
-Settings
-
-</Link>
-
-<Link to="/">
-
-<FaSignOutAlt/>
-
-Logout
-
-</Link>
-
-</div>
-
-);
-
+      </aside>
+    </>
+  );
 }
 
 export default Sidebar;
