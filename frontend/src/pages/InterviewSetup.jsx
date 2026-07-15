@@ -1,291 +1,242 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { FaPlay } from "react-icons/fa";
-
+import { useNavigate } from "react-router-dom";
+import {
+  FaCloudUploadAlt,
+  FaFilePdf,
+  FaRobot,
+  FaSpinner,
+} from "react-icons/fa";
 import API from "../services/api";
-
-import "../assets/css/interviewSetup.css";
 
 function InterviewSetup() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Resume data from Resume Analyzer
-  const resumeData = location.state;
-
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [form, setForm] = useState({
-    analysis: resumeData?.analysis || null,
-
-    department: "",
-
-    domain: "",
-
-    company: "",
-
-    role: "",
-
-    experience: "Fresher",
-
-    questions: "5",
-
-    language: "English",
-
-    resume: null,
-  });
-
-  // ==========================
-  // Handle Input Change
-  // ==========================
-
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  // ==========================
-  // Resume Upload
-  // ==========================
-
-  const handleResume = (e) => {
-    const file = e.target.files[0];
-
-    if (file) {
-      setForm({
-        ...form,
-
-        resume: file,
-      });
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile && selectedFile.type === "application/pdf") {
+      setFile(selectedFile);
+      setError("");
+    } else {
+      setError("Please select a valid PDF file.");
+      setFile(null);
     }
   };
 
-  // ==========================
-  // Start Interview
-  // ==========================
-
-  const startInterview = async () => {
-    if (!form.resume) {
-      alert("Please upload your resume.");
-
+  const handleAnalyzeAndStart = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      setError("Please upload your resume first!");
       return;
     }
 
-    if (!form.department) {
-      alert("Please select your department.");
+    setLoading(true);
+    setError("");
 
-      return;
-    }
-
-    if (!form.domain) {
-      alert("Please select your domain.");
-
-      return;
-    }
-
-    if (!form.role) {
-      alert("Please enter your job role.");
-
-      return;
-    }
+    const formData = new FormData();
+    formData.append("resume", file);
 
     try {
-      setLoading(true);
-
-      const response = await API.post("/interview/start", {
-        department: form.department,
-
-        domain: form.domain,
-
-        role: form.role,
-
-        experience: form.experience,
-
-        questions: form.questions,
-
-        language: form.language,
+      // 1. Upload & analyze resume
+      const response = await API.post("/resume/analyze", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (response.data.success) {
-        localStorage.setItem("sessionId", response.data.sessionId);
+        const { detectedRole, skills, sessionId } = response.data;
 
-        localStorage.setItem("interviewSetup", JSON.stringify(form));
+        // 2. Save session details locally for the Interview Room to read
+        localStorage.setItem("sessionId", sessionId);
+        localStorage.setItem("detectedRole", detectedRole);
+        localStorage.setItem("parsedSkills", JSON.stringify(skills));
 
+        // 3. Cleanly move to the Permission step as originally intended
         navigate("/permission");
       } else {
-        alert(response.data.message);
+        setError(response.data.message || "Failed to analyze resume.");
       }
     } catch (err) {
-      console.log(err);
-
-      alert("Unable to start interview.");
+      console.error("Resume processing failed:", err);
+      setError(
+        err.response?.data?.message ||
+          "An error occurred while analyzing your resume.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="setup-page">
-      <div className="setup-card">
-        <h1>Smart Interview Setup</h1>
-
-        {/* Department */}
-
-        <div className="form-group">
-          <label>Department</label>
-
-          <select
-            name="department"
-            value={form.department}
-            onChange={handleChange}
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        backgroundColor: "#f4f7fc",
+        padding: "20px",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#fff",
+          padding: "40px",
+          borderRadius: "12px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
+          maxWidth: "500px",
+          width: "100%",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ marginBottom: "25px" }}>
+          <h2
+            style={{
+              color: "#d91b23", // Matches the deep crimson color scheme
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              fontSize: "24px",
+              fontWeight: "600",
+            }}
           >
-            <option value="">Select Department</option>
-
-            <option>Computer Science</option>
-
-            <option>Information Technology</option>
-
-            <option>Electronics</option>
-
-            <option>Mechanical</option>
-          </select>
-        </div>
-
-        {/* Domain */}
-
-        <div className="form-group">
-          <label>Domain</label>
-
-          <select name="domain" value={form.domain} onChange={handleChange}>
-            <option value="">Select Domain</option>
-
-            <option>Web Development</option>
-
-            <option>React JS</option>
-
-            <option>Node JS</option>
-
-            <option>Java</option>
-
-            <option>Python</option>
-
-            <option>Data Science</option>
-
-            <option>Artificial Intelligence</option>
-          </select>
-        </div>
-
-        {/* Job Role */}
-
-        <div className="form-group">
-          <label>Job Role</label>
-
-          <input
-            type="text"
-            name="role"
-            value={form.role}
-            placeholder="Frontend Developer"
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* Experience */}
-
-        <div className="form-group">
-          <label>Experience</label>
-
-          <select
-            name="experience"
-            value={form.experience}
-            onChange={handleChange}
+            <FaRobot /> Interview Configuration
+          </h2>
+          <p
+            style={{
+              color: "#666",
+              marginTop: "10px",
+              fontSize: "14px",
+              lineHeight: "1.5",
+            }}
           >
-            <option>Fresher</option>
-
-            <option>1 Year</option>
-
-            <option>2 Years</option>
-
-            <option>3+ Years</option>
-          </select>
+            Upload your resume below. Our AI will analyze your experience and
+            generate a targeted set of interview questions.
+          </p>
         </div>
 
-        {/* Number of Questions */}
-
-        <div className="form-group">
-          <label>Questions</label>
-
-          <select
-            name="questions"
-            value={form.questions}
-            onChange={handleChange}
+        {error && (
+          <div
+            style={{
+              color: "#d91b23",
+              backgroundColor: "#ffebe6",
+              padding: "10px",
+              borderRadius: "6px",
+              marginBottom: "20px",
+              fontSize: "14px",
+            }}
           >
-            <option>5</option>
-
-            <option>10</option>
-
-            <option>15</option>
-          </select>
-        </div>
-
-        {/* Language */}
-
-        <div className="form-group">
-          <label>Language</label>
-
-          <select name="language" value={form.language} onChange={handleChange}>
-            <option>English</option>
-
-            <option>Tamil</option>
-          </select>
-        </div>
-
-        {/* Resume Analysis */}
-
-        {form.analysis && (
-          <div className="analysis-box">
-            <h3>Resume Analysis</h3>
-
-            <p>
-              <strong>ATS Score :</strong> {form.analysis.ats}%
-            </p>
-
-            <p>
-              <strong>Resume Match :</strong> {form.analysis.match}%
-            </p>
+            {error}
           </div>
         )}
 
-        {/* Resume Upload */}
-
-        <div className="form-group">
-          <label>Upload Resume</label>
-
-          <div className="resume-upload">
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx"
-              onChange={handleResume}
-            />
+        <form onSubmit={handleAnalyzeAndStart}>
+          <div style={{ marginBottom: "25px" }}>
+            <label
+              htmlFor="resume-upload"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "2px dashed #cbd5e1",
+                padding: "35px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                backgroundColor: "#f8fafc",
+                transition: "border-color 0.2s",
+              }}
+            >
+              <FaCloudUploadAlt
+                size={46}
+                style={{ color: "#94a3b8", marginBottom: "12px" }}
+              />
+              {file ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "#334155",
+                    fontWeight: "600",
+                  }}
+                >
+                  <FaFilePdf style={{ color: "#d91b23" }} />
+                  <span>{file.name}</span>
+                </div>
+              ) : (
+                <div style={{ color: "#64748b", fontSize: "14px" }}>
+                  <span style={{ fontWeight: "600", color: "#2563eb" }}>
+                    Click to select your PDF resume
+                  </span>
+                  <br />
+                  <small
+                    style={{
+                      color: "#94a3b8",
+                      display: "block",
+                      marginTop: "4px",
+                    }}
+                  >
+                    Only PDF format is accepted
+                  </small>
+                </div>
+              )}
+              <input
+                id="resume-upload"
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+                disabled={loading}
+                style={{ display: "none" }}
+              />
+            </label>
           </div>
 
-          {form.resume && <p>✅ {form.resume.name}</p>}
-        </div>
-
-        {/* Start Button */}
-
-        <button
-          className="start-button"
-          onClick={startInterview}
-          disabled={loading}
-        >
-          <FaPlay />
-
-          {loading ? "Starting Interview..." : "Start Interview"}
-        </button>
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: "14px",
+              backgroundColor: "#2563eb", // Elegant blue button
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: "600",
+              cursor: loading || !file ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              opacity: loading || !file ? 0.7 : 1,
+            }}
+            disabled={loading || !file}
+          >
+            {loading ? (
+              <>
+                <FaSpinner
+                  className="fa-spin"
+                  style={{ animation: "spin 1s linear infinite" }}
+                />
+                Analyzing Resume...
+              </>
+            ) : (
+              "Continue to Permissions"
+            )}
+          </button>
+        </form>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

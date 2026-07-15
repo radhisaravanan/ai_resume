@@ -1,3 +1,5 @@
+// frontend/src/App.jsx
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Authentication
@@ -12,40 +14,72 @@ import Dashboard from "./pages/Dashboard";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import InterviewSetup from "./pages/InterviewSetup";
 import Permission from "./pages/Permission";
-import InterviewRoom from "./pages/InterviewRoom";
 import Report from "./pages/Report";
 
-// Extra Pages
+// Other Pages
 import InterviewHistory from "./pages/InterviewHistory";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Setup from "./pages/Setup";
+
+// FIXED PATH: Pointing back to your pages directory
+import InterviewRoom from "./pages/InterviewRoom";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Home */}
+        {/* ===========================
+            Authentication
+        =========================== */}
         <Route path="/" element={<Home />} />
-
-        {/* Authentication */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Dashboard */}
+        {/* ===========================
+            Dashboard
+        =========================== */}
         <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* Interview Flow */}
+        {/* ===========================
+            Resume Upload & Analyzer
+        =========================== */}
         <Route path="/resume" element={<ResumeAnalyzer />} />
-        <Route path="/setup" element={<InterviewSetup />} />
-        <Route path="/permission" element={<Permission />} />
-        <Route path="/interview" element={<InterviewRoom />} />
-        <Route path="/report" element={<Report />} />
 
-        {/* Other Pages */}
+        {/* ===========================
+            Interview Setup
+        =========================== */}
+        <Route path="/setup" element={<InterviewSetup />} />
+
+        {/* ===========================
+            Permission Page
+        =========================== */}
+        <Route path="/permission" element={<Permission />} />
+
+        {/* ===========================
+            Interview Room
+        =========================== */}
+        <Route path="/interview" element={<InterviewRoom />} />
+        <Route path="/interview/:sessionId" element={<InterviewRoom />} />
+
+        {/* ===========================
+            Final Report
+        =========================== */}
+        <Route path="/report/:sessionId" element={<Report />} />
+
+        {/* ===========================
+            Interview History
+        =========================== */}
         <Route path="/history" element={<InterviewHistory />} />
+
+        {/* ===========================
+            Profile
+        =========================== */}
         <Route path="/profile" element={<Profile />} />
 
-        {/* 404 Page */}
+        {/* ===========================
+            404 Page
+        =========================== */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

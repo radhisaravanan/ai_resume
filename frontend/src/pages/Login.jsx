@@ -9,12 +9,10 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
@@ -24,25 +22,22 @@ function Login() {
       });
 
       if (response.data.success) {
-        // Save Token
         localStorage.setItem("token", response.data.token);
-
-        // Save User
         localStorage.setItem("user", JSON.stringify(response.data.user));
-
-        alert("Login Successful");
-
+        alert("Login Successful!");
         navigate("/dashboard");
       } else {
-        alert(response.data.message);
+        alert(response.data.message || "Invalid credentials.");
       }
     } catch (error) {
-      console.log(error);
-
-      alert(error.response?.data?.message || "Login Failed");
+      console.error("Login connection error:", error);
+      alert(
+        error.response?.data?.message ||
+          "Cannot connect to the server. Please check if your WAMP database and backend server are running.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -54,13 +49,11 @@ function Login() {
               <FaUserGraduate className="header-icon" />
               Student Login
             </h2>
-
             <p>Sign in to start your AI Interview</p>
           </div>
 
           <form onSubmit={handleLogin}>
             <label>Email</label>
-
             <input
               type="email"
               placeholder="Enter Email"
@@ -70,7 +63,6 @@ function Login() {
             />
 
             <label>Password</label>
-
             <input
               type="password"
               placeholder="Enter Password"
@@ -85,7 +77,6 @@ function Login() {
 
             <button type="submit" className="login-btn" disabled={loading}>
               <FaArrowRightToBracket />
-
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>

@@ -1,8 +1,8 @@
 const db = require("../config/db");
 
-// ===============================
+// ======================================
 // Start Interview
-// ===============================
+// ======================================
 exports.startInterview = (req, res) => {
   const userId = req.user.id;
 
@@ -23,19 +23,19 @@ exports.startInterview = (req, res) => {
     res.json({
       success: true,
       sessionId: result.insertId,
-      message: "Interview Started",
+      message: "Interview Started Successfully",
     });
   });
 };
 
-// ===============================
+// ======================================
 // Get Current Question
-// ===============================
+// ======================================
 exports.getQuestion = (req, res) => {
   const sessionId = req.params.sessionId;
 
   db.query(
-    "SELECT current_question, total_questions FROM interview_sessions WHERE id=?",
+    "SELECT current_question,total_questions FROM interview_sessions WHERE id=?",
     [sessionId],
     (err, session) => {
       if (err) {
@@ -91,9 +91,9 @@ exports.getQuestion = (req, res) => {
   );
 };
 
-// ===============================
+// ======================================
 // Save Answer
-// ===============================
+// ======================================
 exports.submitAnswer = (req, res) => {
   const { session_id, question_id, answer } = req.body;
 
@@ -120,7 +120,7 @@ exports.submitAnswer = (req, res) => {
       db.query(
         "INSERT INTO interview_answers(user_id,question_id,answer) VALUES(?,?,?)",
         [userId, question_id, answer],
-        (err) => {
+        (err, result) => {
           if (err) {
             return res.status(500).json({
               success: false,
@@ -131,10 +131,18 @@ exports.submitAnswer = (req, res) => {
           db.query(
             "UPDATE interview_sessions SET current_question=current_question+1 WHERE id=?",
             [session_id],
-            () => {
+            (err2) => {
+              if (err2) {
+                return res.status(500).json({
+                  success: false,
+                  message: err2.message,
+                });
+              }
+
               res.json({
                 success: true,
-                message: "Answer Saved",
+                answer_id: result.insertId,
+                message: "Answer Saved Successfully",
               });
             },
           );
@@ -142,4 +150,36 @@ exports.submitAnswer = (req, res) => {
       );
     },
   );
+};
+
+// ======================================
+// Interview History
+// ======================================
+exports.getInterviewHistory = (req, res) => {
+  const userId = req.user.id;
+
+  const sql = `
+    SELECT
+      id AS session_id,
+      created_at,
+      status,
+      score
+    FROM interview_sessions
+    WHERE user_id=?
+    ORDER BY created_at DESC
+  `;
+
+  db.query(sql, [userId], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    res.json({
+      success: true,
+      history: result,
+    });
+  });
 };

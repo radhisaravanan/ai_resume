@@ -1,111 +1,158 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import "../assets/css/permission.css";
+import {
+  FaCamera,
+  FaMicrophone,
+  FaCheckCircle,
+  FaArrowRight,
+} from "react-icons/fa";
 
 function Permission() {
   const navigate = useNavigate();
+  const [hasCamera, setHasCamera] = useState(false);
+  const [hasMic, setHasMic] = useState(false);
 
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-
-  const [camera, setCamera] = useState(false);
-  const [microphone, setMicrophone] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // ==========================
-  // Start Camera & Microphone
-  // ==========================
-
-  useEffect(() => {
-    startDevices();
-
-    return () => {
-      stopDevices();
-    };
-  }, []);
-
-  const startDevices = async () => {
+  const requestPermissions = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
-
         audio: true,
       });
-
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      if (stream) {
+        setHasCamera(true);
+        setHasMic(true);
+        stream.getTracks().forEach((track) => track.stop()); // Stop immediately after validating
       }
-
-      setCamera(true);
-
-      setMicrophone(true);
     } catch (err) {
-      console.log(err);
-
-      setCamera(false);
-
-      setMicrophone(false);
-    } finally {
-      setLoading(false);
+      console.error("Hardware permission failure: ", err);
+      alert(
+        "Hardware Blocked: Please allow access to camera and microphone to start the AI Voice Interview.",
+      );
     }
   };
 
-  // ==========================
-  // Stop Camera
-  // ==========================
-
-  const stopDevices = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-
-      streamRef.current = null;
+  const handleNext = () => {
+    const sessionId = localStorage.getItem("sessionId");
+    if (sessionId) {
+      navigate(`/interview/${sessionId}`);
+    } else {
+      navigate("/interview");
     }
-  };
-
-  // ==========================
-  // Continue
-  // ==========================
-
-  const continueInterview = () => {
-    stopDevices();
-
-    navigate("/interview");
   };
 
   return (
-    <div className="permission-page">
-      <div className="permission-card">
-        <h1>Camera & Microphone Permission</h1>
-
-        <p>
-          Please allow camera and microphone access before starting the
-          interview.
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        backgroundColor: "#f3f4f6",
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          padding: "40px",
+          borderRadius: "12px",
+          maxWidth: "480px",
+          width: "100%",
+          textAlign: "center",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h1 style={{ fontSize: "24px", marginBottom: "10px" }}>
+          Hardware Access Required
+        </h1>
+        <p style={{ color: "#666", marginBottom: "30px" }}>
+          The AI interviewer needs access to your camera and microphone to track
+          responses and analyze engagement.
         </p>
 
-        <div className="video-box">
-          <video ref={videoRef} autoPlay muted playsInline />
-        </div>
-
-        <div className="status">
-          <h3>Camera :{camera ? " ✅ Enabled" : " ❌ Disabled"}</h3>
-
-          <h3>Microphone :{microphone ? " ✅ Enabled" : " ❌ Disabled"}</h3>
-
-          <h3>
-            Internet :{navigator.onLine ? " ✅ Connected" : " ❌ Offline"}
-          </h3>
-        </div>
-
-        <button
-          className="continue-btn"
-          onClick={continueInterview}
-          disabled={!camera || !microphone || loading}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "30px",
+          }}
         >
-          {loading ? "Checking..." : "Continue Interview"}
-        </button>
+          <div>
+            <div
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                backgroundColor: hasCamera ? "#dcfce7" : "#f3f4f6",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                margin: "0 auto 8px",
+                color: hasCamera ? "#16a34a" : "#666",
+              }}
+            >
+              <FaCamera size={24} />
+            </div>
+            <span style={{ fontSize: "14px", fontWeight: "600" }}>Camera</span>
+          </div>
+          <div>
+            <div
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                backgroundColor: hasMic ? "#dcfce7" : "#f3f4f6",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                margin: "0 auto 8px",
+                color: hasMic ? "#16a34a" : "#666",
+              }}
+            >
+              <FaMicrophone size={24} />
+            </div>
+            <span style={{ fontSize: "14px", fontWeight: "600" }}>
+              Microphone
+            </span>
+          </div>
+        </div>
+
+        {!hasCamera || !hasMic ? (
+          <button
+            onClick={requestPermissions}
+            style={{
+              width: "100%",
+              padding: "12px",
+              backgroundColor: "#2563eb",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            Allow Device Access
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            style={{
+              width: "100%",
+              padding: "12px",
+              backgroundColor: "#16a34a",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+            }}
+          >
+            <FaCheckCircle /> Enter Interview Room <FaArrowRight />
+          </button>
+        )}
       </div>
     </div>
   );

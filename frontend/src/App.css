@@ -208,3 +208,220 @@ body{
     border-right-color: var(--border);
   }
 }
+
+
+
+/* =========================
+   AI Interview Room
+========================= */
+
+.interview-room {
+
+  min-height: 100vh;
+  background: #f4f7fb;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+
+}
+
+
+/* Header */
+
+.interview-header {
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  background:white;
+  padding:20px 30px;
+
+  border-radius:15px;
+
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+
+}
+
+
+.interview-header h1 {
+
+  margin:0;
+  color:#1e293b;
+
+}
+
+
+.timer {
+
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  color:#dc2626;
+
+  font-size:22px;
+  font-weight:bold;
+
+}
+
+
+
+/* Question */
+
+.question-box {
+
+  margin-top:25px;
+
+  background:white;
+
+  padding:25px;
+
+  border-radius:15px;
+
+  text-align:center;
+
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+
+}
+
+
+.question-box h3 {
+
+  color:#2563eb;
+
+}
+
+
+.question-box p {
+
+  font-size:20px;
+
+  color:#334155;
+
+}
+
+
+
+/* Camera */
+
+.camera-section {
+
+  margin-top:30px;
+
+  display:flex;
+
+  flex-direction:column;
+
+  align-items:center;
+
+}
+
+
+.camera-preview {
+
+  width:420px;
+
+  height:260px;
+
+  background:black;
+
+  border-radius:15px;
+
+  object-fit:cover;
+
+}
+
+
+
+/* Buttons */
+
+button {
+
+  border:none;
+
+  cursor:pointer;
+
+  padding:12px 25px;
+
+  border-radius:10px;
+
+  font-size:16px;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+}
+
+
+.camera-btn {
+
+  margin-top:15px;
+
+  background:#2563eb;
+
+  color:white;
+
+}
+
+
+
+.mic-btn {
+
+  margin:20px auto;
+
+  background:#16a34a;
+
+  color:white;
+
+}
+
+
+
+.next-btn {
+
+  background:#2563eb;
+
+  color:white;
+
+  margin:20px auto;
+
+}
+
+
+
+.submit-btn {
+
+  background:#dc2626;
+
+  color:white;
+
+  margin:20px auto;
+
+}
+
+
+
+/* Answer */
+
+textarea {
+
+  display:block;
+
+  width:60%;
+
+  height:120px;
+
+  margin:20px auto;
+
+  padding:15px;
+
+  font-size:17px;
+
+  border-radius:12px;
+
+  border:1px solid #cbd5e1;
+
+}
