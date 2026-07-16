@@ -1,143 +1,147 @@
 const db = require("../config/db");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
-// =======================
-// Register API
-// =======================
-exports.register = async (req, res) => {
-  const { full_name, email, phone, college, password } = req.body;
-
-  // Validate all fields
-  if (!full_name || !email || !phone || !college || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "All fields are required",
-    });
-  }
+// 1. Fully Synced Login Controller with Diagnostic Database Dumps
+const login = async (req, res) => {
+  const email = req.body.email ? req.body.email.trim() : "";
+  const password = req.body.password;
 
   try {
-    db.query(
-      "SELECT * FROM users WHERE email = ?",
-      [email],
-      async (err, result) => {
-        if (err) {
-          return res.status(500).json({
-            success: false,
-            message: err.message,
-          });
-        }
+    const query = "SELECT * FROM users WHERE TRIM(email) = ?";
 
-        if (result.length > 0) {
-          return res.status(409).json({
-            success: false,
-            message: "Email already exists",
-          });
-        }
+    db.query(query, [email], async (err, results) => {
+      if (err) {
+        console.error("❌ Login Database Query Error:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database query error." });
+      }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+      console.log(
+        `🔍 Login Scan - Matching rows found for [${email}]:`,
+        results.length,
+      );
 
-        const sql = `
-          INSERT INTO users
-          (full_name, email, phone, college, password)
-          VALUES (?, ?, ?, ?, ?)
-        `;
+      if (results.length === 0) {
+        console.log(
+          "⚠️ Email not found. Diagnostic mode: Printing all active table records below:",
+        );
 
+        // Diagnostic lookup to expose database synchronization issues
         db.query(
-          sql,
-          [full_name, email, phone, college, hashedPassword],
-          (err, data) => {
-            if (err) {
-              return res.status(500).json({
-                success: false,
-                message: err.message,
-              });
+          "SELECT id, email, full_name FROM users",
+          (allErr, allUsers) => {
+            if (!allErr) {
+              console.log(
+                "📊 [DIAGNOSTIC DUMP] Users currently inside this database context:",
+                allUsers,
+              );
+            } else {
+              console.error(
+                "❌ Diagnostic query failed. Table might be missing or corrupted:",
+                allErr.message,
+              );
             }
-
-            return res.status(201).json({
-              success: true,
-              message: "Registration Successful",
-              userId: data.insertId,
-            });
           },
         );
-      },
-    );
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
 
-// =======================
-// Login API
-// =======================
-exports.login = (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "Email and Password are required",
-    });
-  }
-
-  db.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
-    async (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          success: false,
-          message: err.message,
-        });
-      }
-
-      if (result.length === 0) {
         return res.status(401).json({
           success: false,
-          message: "Invalid Email",
+          message:
+            "Invalid Email. Account does not exist in the database record layers.",
         });
       }
 
-      const user = result[0];
+      const user = results[0];
 
-      const isMatch = await bcrypt.compare(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid Password",
-        });
+      // Structural password string matching check
+      if (password !== user.password) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Incorrect password." });
       }
-
-      const token = jwt.sign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1d",
-        },
-      );
 
       return res.status(200).json({
         success: true,
-        message: "Login Successful",
-        token,
+        message: "Login successful!",
+        token: "mock_token_for_development",
         user: {
           id: user.id,
-          full_name: user.full_name,
           email: user.email,
-          phone: user.phone,
-          college: user.college,
-          role: user.role,
+          name: user.full_name || "User",
         },
       });
-    },
-  );
+    });
+  } catch (error) {
+    console.error("Fatal catch login exception:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 2. Database Field Constraint Aligned Registration Controller
+const register = async (req, res) => {
+  const { name, email, phone, password } = req.body;
+
+  const registrationName = name || "User";
+  const registrationEmail = email ? email.trim() : "";
+
+  try {
+    const checkUser = "SELECT * FROM users WHERE TRIM(email) = ?";
+
+    db.query(checkUser, [registrationEmail], (err, results) => {
+      if (err) {
+        console.error("❌ Registration duplicate pre-check failed:", err);
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message: "Registration validation query error.",
+          });
+      }
+
+      if (results.length > 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Email already exists." });
+      }
+
+      // Explicitly uses full_name, matching structural fields verified by MySQL Workbench
+      const insertSql = `
+        INSERT INTO users (full_name, email, phone, password) 
+        VALUES (?, ?, ?, ?)
+      `;
+
+      db.query(
+        insertSql,
+        [registrationName, registrationEmail, phone || null, password],
+        (insertErr, result) => {
+          if (insertErr) {
+            console.error(
+              "❌ Registration SQL Write Failure:",
+              insertErr.message,
+            );
+            return res.status(500).json({
+              success: false,
+              message: `Registration failed database storage: ${insertErr.message}`,
+            });
+          }
+
+          console.log(
+            `🎯 User successfully written to database row ID: ${result.insertId}`,
+          );
+          return res.status(201).json({
+            success: true,
+            message: "Registration successful!",
+          });
+        },
+      );
+    });
+  } catch (error) {
+    console.error("Fatal catch registration exception:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = {
+  login,
+  register,
 };

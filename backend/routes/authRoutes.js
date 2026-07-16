@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const { register, login } = require("../controllers/authController");
+// Import the synced authentication controller
+const authController = require("../controllers/authController");
 
-// Register API
-router.post("/register", register);
-
-// Login API
-router.post("/login", login);
+// Ensure clean routing callbacks without argument handler function mismatches
+router.post("/login", authController.login);
+router.post("/register", authController.register);
 
 module.exports = router;
