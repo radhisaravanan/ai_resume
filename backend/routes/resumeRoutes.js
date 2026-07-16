@@ -1,65 +1,65 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
-const resumeController = require("../controllers/resumeController");
+const pdfParse = require("pdf-parse");
 
-// Ensure the 'uploads' directory exists safely
-const uploadDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// 📦 Setup binary processing memory storage boundaries
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
-// Configure storage options
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
+/**
+ * @route   POST /api/resume/upload
+ * @desc    Upload candidate portfolio and extract text parameters dynamically
+ * @access  Public
+ */
+router.post("/upload", upload.single("resume"), async (req, res) => {
+  try {
+    // 🔍 Verification 1: Buffer file dynamic payload validation check
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "File processing breakdown. No file stream buffer captured.",
+      });
+    }
 
-// File filter to ensure only PDF formats are processed
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype === "application/pdf") {
-    cb(null, true);
-  } else {
-    cb(new Error("Only PDF files (.pdf) are allowed!"), false);
-  }
-};
+    // ⚙️ Process 2: Safe memory parsing directly via pdf-parse module
+    const pdfData = await pdfParse(req.file.buffer);
+    const extractedText = pdfData.text.toLowerCase();
 
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-}).single("resume");
+    // 🔍 Process 3: Standard technical keyword match scanning engine
+    const skillKeywords = [
+      "javascript",
+      "react",
+      "node",
+      "mysql",
+      "python",
+      "java",
+      "html",
+      "css",
+      "php",
+    ];
+    const foundSkills = [];
 
-// POST: /api/resume/analyze with clean error handling wrapper
-router.post(
-  "/analyze",
-  (req, res, next) => {
-    upload(req, res, function (err) {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({
-          success: false,
-          error:
-            err.code === "LIMIT_FILE_SIZE"
-              ? "File size exceeds the 5MB limit."
-              : err.message,
-        });
-      } else if (err) {
-        return res.status(400).json({
-          success: false,
-          error: err.message,
-        });
+    skillKeywords.forEach((skill) => {
+      if (extractedText.includes(skill)) {
+        foundSkills.push(skill.toUpperCase());
       }
-      next();
     });
-  },
-  resumeController.analyzeResumeAndSetupSession,
-);
+
+    // 🚀 Success execution response parameters matching frontend expectation
+    return res.status(200).json({
+      success: true,
+      message: "Resume evaluation matrix completed successfully!",
+      extractedSkills:
+        foundSkills.length > 0 ? foundSkills : ["GENERAL TECHNICAL METRICS"],
+    });
+  } catch (error) {
+    console.error("Backend PDF parser failure trace:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Extraction failed layers context parsing error logic.",
+    });
+  }
+});
 
 module.exports = router;

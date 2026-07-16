@@ -1,73 +1,37 @@
-const fs = require("fs");
+const axios = require("axios");
 const pdfParse = require("pdf-parse");
 
-async function analyzeResumeAndSetupSession(req, res) {
-  let filePath = null;
-
+exports.analyzeResume = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        error: "Please select a valid PDF file to upload.",
-      });
+    let rawText = "";
+    if (req.file) {
+      const parsed = await pdfParse(req.file.buffer);
+      rawText = parsed.text ? parsed.text.trim() : "";
+    } else if (req.body.manualText) {
+      rawText = req.body.manualText.trim();
     }
 
-    filePath = req.file.path;
-    console.log("📂 Parsing PDF file at:", filePath);
-
-    const fileBuffer = fs.readFileSync(filePath);
-
-    let extractedText = "";
-    try {
-      const pdfData = await pdfParse(fileBuffer);
-      extractedText = pdfData.text
-        ? pdfData.text.replace(/\s+/g, " ").trim()
-        : "";
-    } catch (parseError) {
-      console.warn("⚠️ Extraction engine warning:", parseError.message);
+    if (!rawText || rawText.length < 10) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Empty resume text data content." });
     }
 
-    cleanupFile(filePath);
+    const cleanText = rawText.replace(/[\r\n]+/g, " ").substring(0, 2000);
+    const keywords = cleanText.match(
+      /\b(react|node|javascript|python|sql|java|html|css|aws|docker)\b/gi,
+    ) || ["Software Engineering"];
+    const uniqueSkills = [...new Set(keywords.map((s) => s.toUpperCase()))];
 
-    // Fallback if the PDF is scanned or blank
-    if (!extractedText || extractedText.length < 30) {
-      console.log("💡 Scanned image fallback context active.");
-      extractedText = `
-        Jane Doe
-        React Frontend Developer
-        Skills: React, JavaScript, Node.js, HTML, CSS, REST APIs, MySQL, Git, Tailwind.
-        Experience: Designing responsive dashboard interfaces, optimizing hooks, and integrating state management solutions.
-      `;
-    }
+    const summary = `Candidate shows strong engineering foundational capabilities with direct alignment in fields like ${uniqueSkills.slice(0, 3).join(", ")}.`;
 
     return res.status(200).json({
       success: true,
-      message: "Resume processed successfully!",
-      extractedText: extractedText.substring(0, 3000),
+      summary,
+      skills: uniqueSkills,
+      rawText: cleanText,
     });
-  } catch (error) {
-    console.error("❌ Critical error in resume controller:", error.message);
-    if (filePath) cleanupFile(filePath);
-
-    return res.status(200).json({
-      success: true,
-      message: "Resume processed successfully (Fallback mode)",
-      extractedText:
-        "John Doe \n Skills: React, JavaScript, Node.js, HTML, CSS, REST APIs",
-    });
-  }
-}
-
-function cleanupFile(filePath) {
-  try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
   } catch (err) {
-    console.error("⚠️ Cleanup failed:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
-}
-
-module.exports = {
-  analyzeResumeAndSetupSession,
 };
