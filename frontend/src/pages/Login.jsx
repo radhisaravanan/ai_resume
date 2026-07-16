@@ -7,7 +7,7 @@ import "../assets/css/login.css";
 function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [regno, setRegno] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -17,13 +17,14 @@ function Login() {
 
     try {
       const response = await API.post("/auth/login", {
-        email,
+        regno,
         password,
       });
 
       if (response.data.success) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+
         alert("Login Successful!");
         navigate("/dashboard");
       } else {
@@ -31,9 +32,10 @@ function Login() {
       }
     } catch (error) {
       console.error("Login connection error:", error);
+
       alert(
         error.response?.data?.message ||
-          "Cannot connect to the server. Please check if your WAMP database and backend server are running.",
+          "Cannot connect to the server. Please check if your MySQL database and backend server are running."
       );
     } finally {
       setLoading(false);
@@ -53,12 +55,12 @@ function Login() {
           </div>
 
           <form onSubmit={handleLogin}>
-            <label>Email</label>
+            <label>Register Number</label>
             <input
-              type="email"
-              placeholder="Enter Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Enter Register Number"
+              value={regno}
+              onChange={(e) => setRegno(e.target.value)}
               required
             />
 
@@ -75,7 +77,11 @@ function Login() {
               <a href="#">Forgot Password?</a>
             </div>
 
-            <button type="submit" className="login-btn" disabled={loading}>
+            <button
+              type="submit"
+              className="login-btn"
+              disabled={loading}
+            >
               <FaArrowRightToBracket />
               {loading ? "Logging in..." : "Login"}
             </button>

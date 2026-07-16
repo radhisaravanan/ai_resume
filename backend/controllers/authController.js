@@ -6,10 +6,13 @@ const jwt = require("jsonwebtoken");
 // Register API
 // =======================
 exports.register = async (req, res) => {
-  const { full_name, email, phone, college, password } = req.body;
+  const { full_name, regno, phone, college, password } = req.body;
 
   // Validate all fields
-  if (!full_name || !email || !phone || !college || !password) {
+
+  console.log(req.body);
+console.log({ full_name, regno, phone, college, password });
+  if (!full_name || !regno || !phone || !college || !password) {
     return res.status(400).json({
       success: false,
       message: "All fields are required",
@@ -18,8 +21,8 @@ exports.register = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM users WHERE email = ?",
-      [email],
+      "SELECT * FROM users WHERE regno = ?",
+      [regno],
       async (err, result) => {
         if (err) {
           return res.status(500).json({
@@ -31,7 +34,7 @@ exports.register = async (req, res) => {
         if (result.length > 0) {
           return res.status(409).json({
             success: false,
-            message: "Email already exists",
+            message: "Register Number already exists",
           });
         }
 
@@ -39,13 +42,13 @@ exports.register = async (req, res) => {
 
         const sql = `
           INSERT INTO users
-          (full_name, email, phone, college, password)
+          (full_name, regno, phone, college, password)
           VALUES (?, ?, ?, ?, ?)
         `;
 
         db.query(
           sql,
-          [full_name, email, phone, college, hashedPassword],
+          [full_name, regno, phone, college, hashedPassword],
           (err, data) => {
             if (err) {
               return res.status(500).json({
@@ -59,9 +62,9 @@ exports.register = async (req, res) => {
               message: "Registration Successful",
               userId: data.insertId,
             });
-          },
+          }
         );
-      },
+      }
     );
   } catch (error) {
     return res.status(500).json({
@@ -75,18 +78,18 @@ exports.register = async (req, res) => {
 // Login API
 // =======================
 exports.login = (req, res) => {
-  const { email, password } = req.body;
+  const { regno, password } = req.body;
 
-  if (!email || !password) {
+  if (!regno || !password) {
     return res.status(400).json({
       success: false,
-      message: "Email and Password are required",
+      message: "Register Number and Password are required",
     });
   }
 
   db.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
+    "SELECT * FROM users WHERE regno = ?",
+    [regno],
     async (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -98,7 +101,7 @@ exports.login = (req, res) => {
       if (result.length === 0) {
         return res.status(401).json({
           success: false,
-          message: "Invalid Email",
+          message: "Invalid Register Number",
         });
       }
 
@@ -116,13 +119,13 @@ exports.login = (req, res) => {
       const token = jwt.sign(
         {
           id: user.id,
-          email: user.email,
+          regno: user.regno,
           role: user.role,
         },
         process.env.JWT_SECRET,
         {
           expiresIn: "1d",
-        },
+        }
       );
 
       return res.status(200).json({
@@ -132,12 +135,12 @@ exports.login = (req, res) => {
         user: {
           id: user.id,
           full_name: user.full_name,
-          email: user.email,
+          regno: user.regno,
           phone: user.phone,
           college: user.college,
           role: user.role,
         },
       });
-    },
+    }
   );
 };

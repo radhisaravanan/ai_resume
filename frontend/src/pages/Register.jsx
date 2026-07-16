@@ -8,7 +8,7 @@ function Register() {
 
   const [form, setForm] = useState({
     fullname: "",
-    email: "",
+    regno: "",
     phone: "",
     college: "",
     password: "",
@@ -37,7 +37,7 @@ function Register() {
     try {
       const response = await API.post("/auth/register", {
         full_name: form.fullname,
-        email: form.email,
+        regno: form.regno,
         phone: form.phone,
         college: form.college,
         password: form.password,
@@ -45,7 +45,6 @@ function Register() {
 
       if (response.data.success) {
         alert("Registration Successful");
-
         navigate("/login");
       } else {
         alert(response.data.message);
@@ -54,7 +53,9 @@ function Register() {
       console.log(error);
 
       alert(
-        error.response?.data?.message || error.message || "Registration Failed",
+        error.response?.data?.message ||
+          error.message ||
+          "Registration Failed"
       );
     } finally {
       setLoading(false);
@@ -89,10 +90,10 @@ function Register() {
             />
 
             <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
+              type="text"
+              name="regno"
+              placeholder="Register Number"
+              value={form.regno}
               onChange={handleChange}
               required
             />
@@ -139,7 +140,7 @@ function Register() {
           </form>
 
           <p>
-            Already have an account?
+            Already have an account?{" "}
             <Link to="/login">Login</Link>
           </p>
         </div>
