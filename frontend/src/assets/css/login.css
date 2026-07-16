@@ -65,19 +65,45 @@
    Login Card
 ========================== */
 
-.login-card{
-    width:430px;
-    padding:45px;
-    background:rgba(255,255,255,.16);
-    backdrop-filter:blur(18px);
-    -webkit-backdrop-filter:blur(18px);
-    border:2px solid rgba(255,255,255,.25);
-    border-radius:25px;
-    box-shadow:0 10px 35px rgba(0,0,0,.25);
-    position:relative;
-    overflow:hidden;
+.login-card {
+    /* --- Dimensions --- */
+    width: 450px;             /* Matches the desktop visual width */
+    height: 500px;            /* Matches the tall visual height */
+    
+    /* Responsive adjustment for mobile screens */
+    max-width: 90%;           
+    
+    /* --- Corner Rounding (Radius) --- */
+    border-radius: 32px;      /* Gives it those smooth, modern rounded corners */
+    
+    /* --- Layout & Spacing --- */
+    display: flex;
+    flex-direction: column;
+    padding: 40px;            /* Generous inner spacing as seen in the image */
+    box-sizing: border-box;
+
+    /* --- Existing Glassmorphism Styles --- */
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.03),
+        rgba(255, 255, 255, 0.01)
+    );
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
 }
 
+/* --- Matching Inner Elements (For reference) --- */
+.input-field {
+    border-radius: 16px;      /* Slightly less rounded than the card, perfectly proportional */
+    height: 56px;             /* Tall, easy-to-tap inputs */
+}
+
+.login-button {
+    border-radius: 16px;      /* Matches the input field radius */
+    height: 56px;
+}
 /* Decorative Circles */
 
 .login-card::before{
@@ -121,25 +147,21 @@
     align-items:center;
     gap:12px;
     font-size:32px;
-    color:#ffffff;
-    font-weight:700;
+    color:#1119f0a7;
+    font-weight:800;
 }
 
 .header-icon{
     width:52px;
     height:52px;
-    background:#fff;
+    background:#29bbc9;
     color:#2563eb;
     border-radius:50%;
     padding:12px;
     box-shadow:0 5px 15px rgba(0,0,0,.25);
 }
 
-.login-header p{
-    margin-top:12px;
-    color:#f1f5f9;
-    font-size:15px;
-}
+
 
 /* ==========================
    Labels
@@ -150,9 +172,10 @@
     margin-top:18px;
     margin-bottom:8px;
     font-weight:600;
-    color:#ffffff;
+    color:#150bde;
     position:relative;
     z-index:1;
+    text-align:start;
 }
 
 /* ==========================
@@ -163,9 +186,9 @@
     width:100%;
     padding:15px;
     border-radius:12px;
-    border:2px solid rgba(255,255,255,.25);
-    background:rgba(255,255,255,.18);
-    color:#ffffff;
+    border:2px solid rgba(203, 14, 14, 0.25);
+    background:#e3ddddeb;
+    color:#f0eaea;
     outline:none;
     font-size:15px;
     transition:.3s;
@@ -174,12 +197,12 @@
 }
 
 .login-card input::placeholder{
-    color:#e2e8f0;
+    color:#f0f3f7;
 }
 
 .login-card input:focus{
-    border-color:#60a5fa;
-    background:rgba(255,255,255,.28);
+    border-color:#e3e6ea;
+    background:rgba(139, 2, 2, 0.28);
     box-shadow:0 0 15px rgba(37,99,235,.3);
 }
 
@@ -218,7 +241,7 @@
     border-radius:12px;
     background:linear-gradient(135deg,#2563eb,#4f46e5);
     color:#ffffff;
-    font-size:18px;
+    font-size:20px;
     font-weight:600;
     display:flex;
     justify-content:center;
