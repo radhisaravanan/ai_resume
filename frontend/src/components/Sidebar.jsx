@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 import {
+  FaBars,
+  FaTimes,
   FaHome,
   FaUser,
   FaRobot,
@@ -9,113 +11,152 @@ import {
   FaChartBar,
   FaCog,
   FaSignOutAlt,
-  FaBars,
-  FaTimes,
 } from "react-icons/fa";
 
 import "../assets/css/sidebar.css";
+import collegeLogo from "../assets/images/mountzion-logo.png";
 
 function Sidebar() {
-  const location = useLocation();
+  const [showSidebar, setShowSidebar] = useState(false);
 
-  const [open, setOpen] = useState(true);
+  const navigate = useNavigate();
 
-  const menu = [
-    {
-      title: "Dashboard",
-      path: "/dashboard",
-      icon: <FaHome />,
-    },
-    {
-      title: "Profile",
-      path: "/profile",
-      icon: <FaUser />,
-    },
-    {
-      title: "Interview",
-      path: "/setup",
-      icon: <FaRobot />,
-    },
-    {
-      title: "History",
-      path: "/history",
-      icon: <FaHistory />,
-    },
-    {
-      title: "Report",
-      path: "/report",
-      icon: <FaChartBar />,
-    },
-    {
-      title: "Settings",
-      path: "/settings",
-      icon: <FaCog />,
-    },
-  ];
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
   return (
     <>
-      {/* Toggle Button */}
+      {/* Overlay */}
+      {showSidebar && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setShowSidebar(false)}
+        ></div>
+      )}
 
+      {/* Hamburger Button */}
       <button
-        className="sidebar-toggle"
-        onClick={() => setOpen(!open)}
+        className="menu-toggle"
+        onClick={() => setShowSidebar(true)}
       >
-        {open ? <FaTimes /> : <FaBars />}
+        <FaBars />
       </button>
 
       {/* Sidebar */}
+      <aside className={`sidebar ${showSidebar ? "show" : ""}`}>
 
-      <aside className={open ? "sidebar open" : "sidebar"}>
+        {/* Close Button */}
+        <button
+  className={`menu-toggle ${showSidebar ? "hide" : ""}`}
+  onClick={() => setShowSidebar(true)}
+>
+  <FaBars />
+</button>
 
+        {/* Logo */}
         <div className="sidebar-logo">
 
-          <div className="logo-circle">🤖</div>
+          <div className="logo-circle">
+            <img
+              src={collegeLogo}
+              alt="College Logo"
+              className="college-logo"
+            />
+          </div>
 
-          {open && (
-            <div>
-              <h2>AI Interview</h2>
-              <p>Placement Portal</p>
-            </div>
-          )}
+          <div className="logo-text">
+            <h2>MZORA AI</h2>
+            <p>Interview Platform</p>
+          </div>
 
         </div>
 
+        {/* Menu */}
         <nav className="sidebar-menu">
 
-          {menu.map((item) => (
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              isActive ? "menu-item active" : "menu-item"
+            }
+            onClick={() => setShowSidebar(false)}
+          >
+            <FaHome />
+            <span>Dashboard</span>
+          </NavLink>
 
-            <Link
-              key={item.path}
-              to={item.path}
-              className={
-                location.pathname === item.path
-                  ? "menu-item active"
-                  : "menu-item"
-              }
-            >
-              <span className="menu-icon">
-                {item.icon}
-              </span>
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              isActive ? "menu-item active" : "menu-item"
+            }
+            onClick={() => setShowSidebar(false)}
+          >
+            <FaUser />
+            <span>Profile</span>
+          </NavLink>
 
-              {open && (
-                <span className="menu-text">
-                  {item.title}
-                </span>
-              )}
-            </Link>
+          <NavLink
+            to="/interviewsetup"
+            className={({ isActive }) =>
+              isActive ? "menu-item active" : "menu-item"
+            }
+            onClick={() => setShowSidebar(false)}
+          >
+            <FaRobot />
+            <span>AI Interview</span>
+          </NavLink>
 
-          ))}
+          <NavLink
+            to="/history"
+            className={({ isActive }) =>
+              isActive ? "menu-item active" : "menu-item"
+            }
+            onClick={() => setShowSidebar(false)}
+          >
+            <FaHistory />
+            <span>History</span>
+          </NavLink>
+
+          <NavLink
+            to="/report"
+            className={({ isActive }) =>
+              isActive ? "menu-item active" : "menu-item"
+            }
+            onClick={() => setShowSidebar(false)}
+          >
+            <FaChartBar />
+            <span>Reports</span>
+          </NavLink>
+
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              isActive ? "menu-item active" : "menu-item"
+            }
+            onClick={() => setShowSidebar(false)}
+          >
+            <FaCog />
+            <span>Settings</span>
+          </NavLink>
 
         </nav>
 
-        <Link to="/" className="logout-btn">
+        {/* Logout */}
+        <div className="sidebar-bottom">
 
-          <FaSignOutAlt />
+          <button
+            className="logout-btn"
+            onClick={logout}
+          >
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </button>
 
-          {open && <span>Logout</span>}
-
-        </Link>
+        </div>
 
       </aside>
     </>

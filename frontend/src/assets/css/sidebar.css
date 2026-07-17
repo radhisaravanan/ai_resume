@@ -1,337 +1,579 @@
 /* ==========================================================
-   PREMIUM AI INTERVIEW SIDEBAR
+   MZORA AI SIDEBAR
+   PART 1
+   Global + Hidden Sidebar + Toggle + Overlay + Logo
 ========================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
+    font-family:"Poppins",sans-serif;
 }
 
-/* ================= Toggle Button ================= */
+/* ===============================
+   Hamburger Button
+================================= */
 
-.sidebar-toggle{
+.menu-toggle{
+
     position:fixed;
+
     top:20px;
+
     left:20px;
-    width:48px;
-    height:48px;
+
+    width:50px;
+
+    height:50px;
+
     border:none;
+
     border-radius:14px;
-    background:linear-gradient(135deg,#ec4899,#8b5cf6);
+
+    background:linear-gradient(135deg,#7c4dff,#5b3df5);
+
     color:#fff;
-    font-size:18px;
-    cursor:pointer;
-    z-index:1200;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:0 10px 25px rgba(217,70,239,.25);
-    transition:.3s;
-}
-
-.sidebar-toggle:hover{
-    transform:scale(1.08);
-}
-
-/* ================= Sidebar ================= */
-
-.sidebar{
-    position:fixed;
-    left:0;
-    top:0;
-    width:290px;
-    height:100vh;
-
-    background:rgba(255,255,255,.75);
-    backdrop-filter:blur(20px);
-
-    border-right:1px solid rgba(255,255,255,.6);
-
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-
-    padding:25px 18px;
-
-    transition:.35s ease;
-
-    z-index:1100;
-
-    box-shadow:8px 0 35px rgba(217,70,239,.10);
-}
-
-/* Collapsed */
-
-.sidebar:not(.open){
-    width:90px;
-}
-
-/* ================= Logo ================= */
-
-.sidebar-logo{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    margin-top:60px;
-    margin-bottom:35px;
-    padding:0 10px;
-}
-
-.logo-circle{
-    width:52px;
-    height:52px;
-
-    border-radius:16px;
-
-    background:linear-gradient(
-        135deg,
-        #ec4899,
-        #8b5cf6
-    );
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
 
     font-size:22px;
 
-    color:#fff;
-
-    flex-shrink:0;
-}
-
-.sidebar-logo h2{
-    font-size:20px;
-    color:#111827;
-    font-weight:700;
-}
-
-.sidebar-logo p{
-    color:#6b7280;
-    font-size:12px;
-}
-
-/* ================= Menu ================= */
-
-.sidebar-menu{
-    flex:1;
     display:flex;
-    flex-direction:column;
-    gap:10px;
-}
 
-/* ================= Menu Item ================= */
-
-.menu-item{
-    display:flex;
     align-items:center;
-    gap:15px;
 
-    text-decoration:none;
-
-    padding:14px 16px;
-
-    border-radius:16px;
-
-    color:#374151;
-
-    font-size:15px;
-    font-weight:500;
-
-    transition:.3s;
-}
-
-.menu-item:hover{
-    background:linear-gradient(
-        135deg,
-        #fdf2f8,
-        #f3e8ff
-    );
-
-    transform:translateX(5px);
-
-    color:#d946ef;
-}
-
-/* ================= Active ================= */
-
-.menu-item.active{
-    background:linear-gradient(
-        135deg,
-        #ec4899,
-        #8b5cf6
-    );
-
-    color:#fff;
-
-    box-shadow:0 10px 25px rgba(217,70,239,.30);
-}
-
-.menu-item.active .menu-icon{
-    color:#fff;
-}
-
-/* ================= Icon ================= */
-
-.menu-icon{
-    min-width:24px;
-    font-size:18px;
-    display:flex;
     justify-content:center;
-    align-items:center;
+
+    cursor:pointer;
+
+    z-index:1200;
+
+    transition:.35s;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.25);
+
 }
 
-.menu-text{
-    white-space:nowrap;
+.menu-toggle:hover{
+
+    transform:scale(1.08);
+
 }
 
-/* ================= Logout ================= */
+/* ===============================
+   Overlay
+================================= */
 
-.logout-btn{
-    display:flex;
-    align-items:center;
-    gap:15px;
+.sidebar-overlay{
 
-    text-decoration:none;
-
-    padding:15px;
-
-    border-radius:16px;
-
-    background:#fff;
-
-    color:#ef4444;
-
-    font-weight:600;
-
-    border:1px solid #fee2e2;
-
-    transition:.3s;
-}
-
-.logout-btn:hover{
-    background:#ef4444;
-    color:#fff;
-}
-
-/* ================= Dashboard Shift ================= */
-
-/*
-Add this in dashboard.css also
-
-.dashboard-content{
-    margin-left:290px;
-}
-
-When collapsed:
-
-.dashboard.sidebar-collapsed .dashboard-content{
-    margin-left:90px;
-}
-*/
-
-/* ================= Scrollbar ================= */
-
-.sidebar::-webkit-scrollbar{
-    width:6px;
-}
-
-.sidebar::-webkit-scrollbar-thumb{
-    background:#d946ef;
-    border-radius:20px;
-}
-
-/* ================= Fancy Glow ================= */
-
-.sidebar::before{
-    content:"";
-
-    position:absolute;
+    position:fixed;
 
     top:0;
+
     left:0;
 
     width:100%;
-    height:100%;
 
-    background:
-        radial-gradient(
-            circle at top left,
-            rgba(236,72,153,.08),
-            transparent 45%
-        );
+    height:100vh;
 
-    pointer-events:none;
+    background:rgba(0,0,0,.45);
+
+    backdrop-filter:blur(3px);
+
+    z-index:999;
+
+    animation:fadeIn .3s ease;
+
 }
 
-/* ================= Animation ================= */
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+    }
+
+    to{
+
+        opacity:1;
+
+    }
+
+}
+
+/* ===============================
+   Sidebar
+================================= */
+
+.sidebar{
+
+    position:fixed;
+
+    top:0;
+
+    left:-300px;
+
+    width:280px;
+
+    height:100vh;
+
+    background:rgba(20,24,42,.95);
+
+    backdrop-filter:blur(20px);
+
+    border-right:1px solid rgba(255,255,255,.08);
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:space-between;
+
+    padding:28px 20px;
+
+    overflow-y:auto;
+
+    z-index:1000;
+
+    transition:left .4s ease;
+
+    box-shadow:8px 0 30px rgba(0,0,0,.30);
+
+}
+
+/* ===============================
+   Show Sidebar
+================================= */
+
+.sidebar.show{
+
+    left:0;
+
+}
+
+/* ===============================
+   Close Button
+================================= */
+
+.close-btn{
+
+    position:absolute;
+
+    top:20px;
+
+    right:20px;
+
+    width:46px;
+
+    height:46px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,.12);
+
+    color:#fff;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.close-btn:hover{
+
+    background:#7c4dff;
+
+    transform:rotate(90deg);
+
+}
+.close-btn:hover{
+
+    background:#7c4dff;
+
+    transform:rotate(90deg);
+
+}
+
+/* ===============================
+   Logo
+================================= */
+
+.sidebar-logo{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+    margin-top:55px;
+
+    margin-bottom:45px;
+
+}
+
+/* ===============================
+   Logo Circle
+================================= */
+
+.logo-circle{
+
+    width:60px;
+
+    height:60px;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    overflow:hidden;
+
+    flex-shrink:0;
+
+}
+
+/* ===============================
+   College Logo
+================================= */
+
+.college-logo{
+
+    width:48px;
+
+    height:48px;
+
+    object-fit:contain;
+
+}
+
+/* ===============================
+   Logo Text
+================================= */
+
+.logo-text h2{
+
+    color:#fff;
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+.logo-text p{
+
+    color:#b9bfd4;
+
+    font-size:13px;
+
+    margin-top:4px;
+
+}
+
+/* Hide Scrollbar */
+
+.sidebar::-webkit-scrollbar{
+
+    width:0;
+
+}
+
+.sidebar{
+
+    scrollbar-width:none;
+
+}/* ==========================================================
+   MZORA AI SIDEBAR
+   PART 2
+   Menu + Logout + Responsive
+========================================================== */
+
+/* ===============================
+   Sidebar Menu
+================================= */
+
+.sidebar-menu{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+    flex:1;
+
+}
+
+/* ===============================
+   Menu Item
+================================= */
+
+.menu-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+    text-decoration:none;
+
+    color:#d9def2;
+
+    padding:16px 18px;
+
+    border-radius:16px;
+
+    font-size:16px;
+
+    font-weight:500;
+
+    transition:.3s;
+
+}
+
+.menu-item svg{
+
+    font-size:20px;
+
+    min-width:22px;
+
+}
+
+/* ===============================
+   Hover
+================================= */
+
+.menu-item:hover{
+
+    background:rgba(255,255,255,.08);
+
+    color:#fff;
+
+    transform:translateX(6px);
+
+}
+
+/* ===============================
+   Active
+================================= */
+
+.menu-item.active{
+
+    background:linear-gradient(135deg,#7c4dff,#5b3df5);
+
+    color:#fff;
+
+    box-shadow:0 12px 25px rgba(92,70,255,.30);
+
+}
+
+/* ===============================
+   Bottom
+================================= */
+
+.sidebar-bottom{
+
+    margin-top:30px;
+
+}
+
+/* ===============================
+   Logout Button
+================================= */
+
+.logout-btn{
+
+    width:100%;
+
+    border:none;
+
+    outline:none;
+
+    cursor:pointer;
+
+    background:#ff4d6d;
+
+    color:#565454;
+
+    border-radius:16px;
+
+    padding:15px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:12px;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.logout-btn:hover{
+
+    background:#ff2f56;
+
+    transform:translateY(-3px);
+
+}
+
+/* ===============================
+   Tablet
+================================= */
+
+@media (max-width:768px){
+
+    .sidebar{
+
+        width:250px;
+
+        padding:22px 16px;
+
+    }
+
+    .logo-circle{
+
+    width:60px;
+
+    height:60px;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    overflow:hidden;
+
+    flex-shrink:0;
+
+}
+
+    .college-logo{
+
+        width:44px;
+
+        height:44px;
+
+    }
+
+    .logo-text h2{
+
+        font-size:18px;
+
+    }
+
+    .logo-text p{
+
+        font-size:12px;
+
+    }
+
+    .menu-item{
+
+        font-size:15px;
+
+        padding:14px 15px;
+
+    }
+
+    .menu-item svg{
+
+        font-size:18px;
+
+    }
+
+}
+
+/* ===============================
+   Mobile
+================================= */
+
+@media (max-width:480px){
+
+    .menu-toggle{
+
+        width:46px;
+
+        height:46px;
+
+        font-size:20px;
+
+        top:15px;
+
+        left:15px;
+
+    }
+/* Hide hamburger when sidebar opens */
+
+.menu-toggle.hide{
+
+    opacity:0;
+
+    visibility:hidden;
+
+    pointer-events:none;
+
+}
+    .sidebar{
+
+        width:230px;
+
+    }
+
+    .menu-item{
+
+        font-size:14px;
+
+        gap:12px;
+
+    }
+
+    .logout-btn{
+
+        font-size:14px;
+
+        padding:13px;
+
+    }
+
+}
+
+/* ===============================
+   Smooth Animations
+================================= */
 
 .sidebar,
 .menu-item,
 .logout-btn,
-.sidebar-toggle{
-    transition:all .35s ease;
-}
+.menu-toggle,
+.close-btn{
 
-/* ================= Mobile ================= */
-
-@media(max-width:992px){
-
-    .sidebar{
-        transform:translateX(-100%);
-    }
-
-    .sidebar.open{
-        transform:translateX(0);
-    }
-
-    .sidebar:not(.open){
-        transform:translateX(-100%);
-    }
+    transition:all .3s ease;
 
 }
-
-/* ================= Small Mobile ================= */
-
-@media(max-width:576px){
-
-    .sidebar{
-        width:260px;
-    }
-
-    .sidebar-logo h2{
-        font-size:18px;
-    }
-
-    .menu-item{
-        font-size:14px;
-    }
-
-}
-
-/* ================= Hover Glow ================= */
-
-.menu-item:hover{
-    box-shadow:0 8px 25px rgba(217,70,239,.15);
-}
-
-.logout-btn:hover{
-    box-shadow:0 10px 25px rgba(239,68,68,.25);
-}
-
-/* ================= Premium Glass Effect ================= */
-
-.sidebar{
-    background:
-        linear-gradient(
-            180deg,
-            rgba(255,255,255,.80),
-            rgba(255,255,255,.65)
-        );
-}
-
-/* ================= End ================= */
