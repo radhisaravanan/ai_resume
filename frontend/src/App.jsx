@@ -5,25 +5,66 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+
+// Authentication
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+
+// Interview Flow
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import Permission from "./pages/permission";
 import Dashboard from "./pages/Dashboard";
 import InterviewRoom from "./pages/InterviewRoom";
 import Report from "./pages/Report";
+
+// Other Pages
+import Features from "./pages/Features";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Profile from "./pages/Profile";
+import History from "./pages/History";
+import NotFound from "./pages/NotFound";
+
 import { StageGuard } from "./components/StageGuard";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Pathways */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* ===========================
+            Public Routes
+        =========================== */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected Sequential Stage Gates */}
+        <Route path="/features" element={<Features />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+
+        {/* ===========================
+            Protected Routes
+        =========================== */}
+
+        <Route
+          path="/profile"
+          element={
+            <StageGuard requiredStage={1}>
+              <Profile />
+            </StageGuard>
+          }
+        />
+
+        <Route
+          path="/history"
+          element={
+            <StageGuard requiredStage={1}>
+              <History />
+            </StageGuard>
+          }
+        />
+
         <Route
           path="/resume"
           element={
@@ -32,6 +73,7 @@ function App() {
             </StageGuard>
           }
         />
+
         <Route
           path="/permissions"
           element={
@@ -40,6 +82,7 @@ function App() {
             </StageGuard>
           }
         />
+
         <Route
           path="/dashboard"
           element={
@@ -48,6 +91,12 @@ function App() {
             </StageGuard>
           }
         />
+
+        <Route
+          path="/interview"
+          element={<Navigate to="/interview/1" replace />}
+        />
+
         <Route
           path="/interview/:questionId"
           element={
@@ -56,6 +105,7 @@ function App() {
             </StageGuard>
           }
         />
+
         <Route
           path="/report"
           element={
@@ -64,10 +114,14 @@ function App() {
             </StageGuard>
           }
         />
+
+        {/* ===========================
+            404 Page
+        =========================== */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
 }
 
-// CRUCIAL EXPORT: This directly fixes the "does not provide an export named 'default'" crash!
 export default App;
