@@ -7,6 +7,7 @@ import {
 
 import "../assets/css/features.css";
 
+
 function Features() {
 
     const featureList = [
@@ -49,9 +50,6 @@ function Features() {
 
                 <h2>Platform Features</h2>
 
-                <p>
-                    Everything you need to prepare confidently for your next interview.
-                </p>
 
             </div>
 

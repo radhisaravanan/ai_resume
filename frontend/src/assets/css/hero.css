@@ -5,13 +5,10 @@
     position:relative;
 
     width:100%;
-
     min-height:100vh;
 
     display:flex;
-
     justify-content:center;
-
     align-items:center;
 
     padding:150px 8% 80px;
@@ -19,18 +16,15 @@
     overflow:hidden;
 
     background:
-    linear-gradient(
-        rgba(255,255,255,.85),
-        rgba(255,255,255,.92)
-    ),
-    url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1920&q=80");
+        linear-gradient(
+            rgba(15,23,42,0),
+            rgba(15,23,42,0)
+        ),
+        url("../images/collegeimage.jpeg");
 
     background-size:cover;
-
     background-position:center;
-
     background-repeat:no-repeat;
-
 }
 
 
@@ -48,7 +42,7 @@
 
     height:550px;
 
-    background:#2563eb22;
+    background:#d1d5dd22;
 
     border-radius:50%;
 
@@ -157,7 +151,7 @@
 
     font-weight:800;
 
-    color:#0f172a;
+    color:#db1154;
 
     margin-bottom:30px;
 
@@ -238,7 +232,7 @@
 
     box-shadow:
 
-    0 15px 35px rgba(37,99,235,.25);
+    0 15px 35px rgba(235, 240, 252, 0.25);
 
 }
 

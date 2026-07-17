@@ -14,6 +14,11 @@ function Interview() {
   const [time, setTime] = useState(1200);
   const [isListening, setIsListening] = useState(false);
 
+  // Audio playback and binary state tracking references
+  const [audioUrl, setAudioUrl] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
   const recognitionRef = useRef(null);
 
   // ===============================
@@ -38,9 +43,14 @@ function Interview() {
     }
   };
 
-  // useEffect(() => {
-  //   loadQuestion();
-  // }, []);
+  useEffect(() => {
+    if (sessionId) {
+      loadQuestion();
+    } else {
+      alert("Session ID missing. Please restart from dashboard.");
+      navigate("/dashboard");
+    }
+  }, []);
 
   // ===============================
   // Timer
@@ -50,14 +60,10 @@ function Interview() {
       setTime((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-
           alert("Interview Completed");
-
           navigate("/dashboard");
-
           return 0;
         }
-
         return prev - 1;
       });
     }, 1000);
@@ -70,77 +76,98 @@ function Interview() {
   // ===============================
   const speakQuestion = (text) => {
     if (!text) return;
-
     window.speechSynthesis.cancel();
-
     const speech = new SpeechSynthesisUtterance(text);
-
     speech.lang = "en-US";
     speech.rate = 1;
     speech.pitch = 1;
-
     window.speechSynthesis.speak(speech);
   };
 
   // ===============================
-  // Initialize Speech Recognition
+  // Initialize Speech Recognition & MediaRecorder
   // ===============================
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Speech Recognition is not supported.");
-      return;
+      console.warn("Native browser Speech Recognition is not supported.");
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        console.log("Speech engine tracking online...");
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript.trim().length > 0) {
+          setAnswer(transcript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech Recognition Error:", event.error);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
     }
-
-    const recognition = new SpeechRecognition();
-
-    recognition.lang = "en-US";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    recognition.onstart = () => {
-      console.log("Recording Started");
-      setIsListening(true);
-    };
-
-    recognition.onresult = (event) => {
-      let transcript = "";
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-      }
-
-      setAnswer(transcript);
-    };
-
-    recognition.onerror = (event) => {
-      console.log(event.error);
-      alert("Speech Error : " + event.error);
-    };
-
-    recognition.onend = () => {
-      console.log("Recording Stopped");
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
   }, []);
 
   // ===============================
-  // Start Recording
+  // Start Recording (Audio + Text)
   // ===============================
-  const startRecording = () => {
-    if (!recognitionRef.current) {
-      alert("Speech Recognition Not Available");
-      return;
+  const startRecording = async () => {
+    setAnswer("");
+    setAudioUrl(null);
+    audioChunksRef.current = [];
+
+    // 1. Try starting audio stream recording
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/wav",
+        });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorderRef.current.start();
+      setIsListening(true);
+    } catch (err) {
+      console.error("Microphone hardware connection rejected:", err);
+      alert("Please grant Microphone permission inside your browser settings!");
     }
 
-    try {
-      recognitionRef.current.start();
-    } catch (err) {
-      console.log(err);
+    // 2. Start parallel Speech Recognition text tracking
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.warn("Recognition engine already initialized or active:", err);
+      }
     }
   };
 
@@ -148,41 +175,71 @@ function Interview() {
   // Stop Recording
   // ===============================
   const stopRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
+      // stop mic tracks to turn off the hardware light indicator
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
+    }
+
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.warn(err);
+      }
     }
 
     setIsListening(false);
   };
 
   // ===============================
-  // Submit Answer
+  // Submit Answer (Using Multi-part payload)
   // ===============================
   const submitAnswer = async () => {
-    if (answer.trim() === "") {
-      alert("Please answer the question.");
-      return;
-    }
-
     stopRecording();
 
+    // Prepare FormData payload configuration to send raw audio files & properties cleanly
+    const formData = new FormData();
+    formData.append("session_id", sessionId);
+    formData.append("question_id", questionId);
+
+    // Send final transcript answer text string if browser Speech API processed it successfully
+    formData.append("answer", answer);
+
+    // Append raw audio blob file data if recorded
+    if (audioChunksRef.current.length > 0) {
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+      formData.append("audio", audioBlob, "user_voice_recording.wav");
+    }
+
     try {
-      const res = await API.post("/interview/answer", {
-        session_id: sessionId,
-        question_id: questionId,
-        answer,
+      const res = await API.post("/interview/answer", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data.success) {
-        setAnswer("");
+        // If server successfully transcribes, let's update state with backend's returned clean text!
+        const serverText =
+          res.data.transcribedText || "Answer Saved Successfully!";
+        setAnswer(serverText);
 
-        loadQuestion();
+        // Brief interval check visual status feedback then reload next questions sequence
+        setTimeout(() => {
+          setAnswer("");
+          setAudioUrl(null);
+          loadQuestion();
+        }, 3000);
       } else {
         alert(res.data.message);
       }
     } catch (err) {
-      console.log(err);
-      alert("Unable to save answer");
+      console.error("Form Submit Error:", err);
+      alert("Unable to save answer processing payload.");
     }
   };
 
@@ -194,7 +251,6 @@ function Interview() {
       <div className="interview-card">
         <div className="header">
           <h2>🤖 AI Interview Assistant</h2>
-
           <h3>
             {minutes}:{seconds.toString().padStart(2, "0")}
           </h3>
@@ -208,11 +264,28 @@ function Interview() {
           🔊 Listen Again
         </button>
 
+        {/* Real-time transcription displaying text as user talks */}
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Speak or type your answer..."
+          placeholder="Recording voice stream transcript will reflect here..."
         />
+
+        {/* Audio playback segment showing recorded output container */}
+        {audioUrl && (
+          <div className="audio-player-container">
+            <span
+              style={{ fontSize: "12px", color: "#22c55e", fontWeight: "bold" }}
+            >
+              📢 Review Your Captured Answer:
+            </span>
+            <audio
+              src={audioUrl}
+              controls
+              style={{ width: "100%", marginTop: "5px" }}
+            />
+          </div>
+        )}
 
         <div className="button-group">
           {!isListening ? (

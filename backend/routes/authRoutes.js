@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const authController = require("../controllers/authController");
 
-const { register, login } = require("../controllers/authController");
+// Secure registration dynamic checkpoint router sequence
+router.post("/register", authController.register);
 
-// Register API
-router.post("/register", register);
-
-// Login API
-router.post("/login", login);
+// Secure login check execution pathway routing endpoint configuration
+router.post("/login", authController.login);
 
 module.exports = router;

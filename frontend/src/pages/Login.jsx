@@ -1,98 +1,176 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaArrowRightToBracket, FaUserGraduate } from "react-icons/fa6";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "../assets/css/login.css";
 
-function Login() {
+const Login = () => {
   const navigate = useNavigate();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
+  const [credentials, setCredentials] = useState({
+    regno: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleLogin = async (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setErrorMsg("");
     setLoading(true);
 
     try {
-      const response = await API.post("/auth/login", {
-        email,
-        password,
+      const { data } = await API.post("/auth/login", {
+        regno: credentials.regno.trim(),
+        password: credentials.password,
       });
 
-      if (response.data.success) {
-        // Save Token
-        localStorage.setItem("token", response.data.token);
-
-        // Save User
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-
-        alert("Login Successful");
-
-        navigate("/dashboard");
+      if (data.success) {
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("user_regno", credentials.regno.trim());
+        localStorage.setItem("highest_stage", "3"); // Move automatically to resume upload step
+        navigate("/resume");
       } else {
-        alert(response.data.message);
+        setErrorMsg(data.message || "Invalid credentials execution check.");
       }
     } catch (error) {
-      console.log(error);
-
-      alert(error.response?.data?.message || "Login Failed");
+      setErrorMsg(
+        error.response?.data?.message ||
+          error.message ||
+          "Login authentication failed.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="login-page">
-      <div className="login-right">
-        <div className="login-card">
-          <div className="login-header">
-            <h2>
-              <FaUserGraduate className="header-icon" />
-              Student Login
-            </h2>
-
-            <p>Sign in to start your AI Interview</p>
+    <div
+      className="login-page"
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        padding: "20px",
+      }}
+    >
+      <div
+        className="login-card"
+        style={{
+          background: "rgba(255, 255, 255, 0.08)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          padding: "30px 40px",
+          borderRadius: "20px",
+          width: "100%",
+          maxWidth: "460px",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <h2
+          style={{ textAlign: "center", color: "#fff", marginBottom: "20px" }}
+        >
+          Welcome Back
+        </h2>
+        {errorMsg && (
+          <div
+            style={{
+              backgroundColor: "rgba(239, 68, 68, 0.15)",
+              color: "#fca5a5",
+              padding: "10px",
+              borderRadius: "8px",
+              marginBottom: "16px",
+              textAlign: "center",
+            }}
+          >
+            {errorMsg}
           </div>
-
-          <form onSubmit={handleLogin}>
-            <label>Email</label>
-
+        )}
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+        >
+          <div>
+            <label style={{ color: "#cbd5e1", fontSize: "12px" }}>
+              Register Number
+            </label>
             <input
-              type="email"
-              placeholder="Enter Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              name="regno"
+              value={credentials.regno}
+              onChange={handleChange}
+              autoComplete="new-variable-regno"
               required
+              style={inputStyle}
             />
-
-            <label>Password</label>
-
+          </div>
+          <div>
+            <label style={{ color: "#cbd5e1", fontSize: "12px" }}>
+              Password
+            </label>
             <input
               type="password"
-              placeholder="Enter Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={credentials.password}
+              onChange={handleChange}
+              autoComplete="new-password"
               required
+              style={inputStyle}
             />
-
-            <div className="forgot-password">
-              <a href="#">Forgot Password?</a>
-            </div>
-
-            <button type="submit" className="login-btn" disabled={loading}>
-              <FaArrowRightToBracket />
-
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
-        </div>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "12px",
+              backgroundColor: "#2563eb",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              marginTop: "8px",
+              cursor: "pointer",
+              fontWeight: "600",
+            }}
+          >
+            {loading ? "Authenticating..." : "Login"}
+          </button>
+        </form>
+        <p
+          style={{
+            textAlign: "center",
+            color: "#94a3b8",
+            marginTop: "20px",
+            fontSize: "13px",
+          }}
+        >
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            style={{ color: "#3b82f6", textDecoration: "none" }}
+          >
+            Register
+          </Link>
+        </p>
       </div>
     </div>
   );
-}
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: "10px 14px",
+  backgroundColor: "rgba(255, 255, 255, 0.05)",
+  border: "1px solid rgba(255, 255, 255, 0.15)",
+  borderRadius: "8px",
+  color: "#fff",
+  marginTop: "4px",
+  boxSizing: "border-box",
+};
 
 export default Login;

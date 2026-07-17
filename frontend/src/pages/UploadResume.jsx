@@ -1,283 +1,103 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // 1. Import useNavigate
+
+const ResumeUpload = () => {
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const navigate = useNavigate(); // 2. Initialize the hook
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleStartInterview = async (e) => {
+    e.preventDefault(); // Prevent default browser form refresh
+
+    if (!file) {
+      alert("Please choose a resume file before starting the interview.");
+      return;
+    }
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("resume", file);
+
+    try {
+      // 3. Post file to backend
+      const response = await fetch("http://localhost:5000/api/resumes/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Include token if you use auth
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log("Resume uploaded successfully!");
+        // 4. REDIRECT THE USER TO THE INTERVIEW ROOM
+        navigate("/interview");
+      } else {
+        alert(data.message || "Upload failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(
+        "Something went wrong connecting to the server. Moving to interview room with fallback options.",
+      );
+      // Fallback routing even if backend upload has an issue so your flow doesn't freeze
+      navigate("/interview");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        maxWidth: "500px",
+        margin: "100px auto",
+        padding: "30px",
+        border: "1px solid #e5e7eb",
+        borderRadius: "12px",
+        textAlign: "center",
+        fontFamily: "system-ui",
+      }}
+    >
+      <h2>📄 Upload Your Resume</h2>
+      <p style={{ color: "#6b7280" }}>
+        We will customize your technical questions based on your background.
+      </p>
+
+      <form onSubmit={handleStartInterview}>
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          onChange={handleFileChange}
+          style={{ margin: "20px 0", display: "block", width: "100%" }}
+        />
+        <button
+          type="submit"
+          disabled={uploading}
+          style={{
+            width: "100%",
+            padding: "12px",
+            backgroundColor: "#2563eb",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            fontSize: "16px",
+            fontWeight: "600",
+            cursor: uploading ? "not-allowed" : "pointer",
+          }}
+        >
+          {uploading ? "Processing Resume..." : "🚀 Start Interview"}
+        </button>
+      </form>
+    </div>
+  );
+};
 
-import {
-    FaCloudUploadAlt,
-    FaFilePdf
-} from "react-icons/fa";
-
-import "../assets/css/upload.css";
-
-
-function UploadResume() {
-
-
-    const navigate = useNavigate();
-
-
-    const [department, setDepartment] = useState("");
-
-    const [role, setRole] = useState("");
-
-    const [file, setFile] = useState(null);
-
-
-
-    const handleFile = (e)=>{
-
-        setFile(e.target.files[0]);
-
-    };
-
-
-
-
-
-    const handleUpload = ()=>{
-
-
-        if(!department){
-
-            alert("Please select department");
-
-            return;
-
-        }
-
-
-
-        if(!role){
-
-            alert("Please select job role");
-
-            return;
-
-        }
-
-
-
-        if(!file){
-
-            alert("Please select your resume");
-
-            return;
-
-        }
-
-
-
-        navigate("/resume-analysis",{
-
-            state:{
-
-                department:department,
-
-                role:role,
-
-                resume:file
-
-            }
-
-        });
-
-
-    };
-
-
-
-
-
-
-    return (
-
-        <div className="upload-page">
-
-
-            <div className="upload-card">
-
-
-                <FaCloudUploadAlt className="upload-icon"/>
-
-
-                <h1>
-                    Upload Your Resume
-                </h1>
-
-
-                <p>
-                    Select your department and role before uploading resume.
-                </p>
-
-
-
-
-                {/* Department */}
-
-                <label>
-                    Department
-                </label>
-
-
-                <select
-
-                    value={department}
-
-                    onChange={(e)=>setDepartment(e.target.value)}
-
-                >
-
-                    <option value="">
-                        Select Department
-                    </option>
-
-                    <option>
-                        Computer Science
-                    </option>
-
-                    <option>
-                        Information Technology
-                    </option>
-
-                    <option>
-                        Electronics
-                    </option>
-
-                    <option>
-                        Mechanical
-                    </option>
-
-                    <option>
-                        Civil
-                    </option>
-
-
-                </select>
-
-
-
-
-
-
-                {/* Role */}
-
-                <label>
-                    Job Role
-                </label>
-
-
-                <select
-
-                    value={role}
-
-                    onChange={(e)=>setRole(e.target.value)}
-
-                >
-
-                    <option value="">
-                        Select Role
-                    </option>
-
-                    <option>
-                        Frontend Developer
-                    </option>
-
-                    <option>
-                        Backend Developer
-                    </option>
-
-                    <option>
-                        Full Stack Developer
-                    </option>
-
-                    <option>
-                        Java Developer
-                    </option>
-
-                    <option>
-                        Python Developer
-                    </option>
-
-                    <option>
-                        Data Scientist
-                    </option>
-
-
-                </select>
-
-
-
-
-
-
-
-                {/* Resume Upload */}
-
-                <label className="upload-box">
-
-
-                    <FaFilePdf className="pdf-icon"/>
-
-
-                    {
-
-                    file
-
-                    ?
-
-                    file.name
-
-                    :
-
-                    "Choose Resume (PDF / DOC / DOCX)"
-
-                    }
-
-
-
-                    <input
-
-                        type="file"
-
-                        accept=".pdf,.doc,.docx"
-
-                        onChange={handleFile}
-
-                        hidden
-
-                    />
-
-
-                </label>
-
-
-
-
-
-
-                <button
-
-                    className="upload-btn"
-
-                    onClick={handleUpload}
-
-                >
-
-                    Upload Resume
-
-                </button>
-
-
-
-
-            </div>
-
-
-        </div>
-
-    );
-
-}
-
-
-
-export default UploadResume;
+export default ResumeUpload;
