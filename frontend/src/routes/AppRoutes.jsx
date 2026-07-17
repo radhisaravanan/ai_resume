@@ -34,10 +34,8 @@ function AppRoutes() {
         />
 
       <Route path="/report" element={<Report />} />
-<Route
-path="/interview"
-element={<InterviewRoom />}
-/>
+      <Route path="/interview" element={<InterviewRoom />} />
+      <Route path="/interview/:questionId" element={<InterviewRoom />} />
    <Route path="/permission"
     element={<Permission />}
 />

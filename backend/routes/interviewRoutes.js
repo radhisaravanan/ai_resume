@@ -11,7 +11,10 @@ router.post("/question", interviewController.generateQuestion);
 // STAGE 3: Save answer + return [SUGGESTION] feedback
 router.post("/answer", interviewController.saveAnswerAndEvaluate);
 
-// Final report
+// COMPREHENSIVE REPORT: Evaluates full interview_responses_log
+router.post("/evaluate-report", interviewController.evaluateReport);
+
+// Final report (legacy DB)
 router.get("/report/:regno", interviewController.getFinalReport);
 
 module.exports = router;
