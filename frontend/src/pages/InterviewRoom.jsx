@@ -1,48 +1,73 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const mockQuestions = [
-  {
-    id: 1,
-    question:
-      "How does the React Virtual DOM optimize UI rendering, and how does reconciliation reduce unnecessary DOM work?",
-  },
-  {
-    id: 2,
-    question:
-      "Compare SQL indexes with sequential scans, and explain when each is preferred in production systems.",
-  },
-  {
-    id: 3,
-    question:
-      "Describe the Node.js event loop and how asynchronous callbacks are processed across phases.",
-  },
-  {
-    id: 4,
-    question:
-      "What are the common RESTful HTTP status code groups and what do they communicate to clients?",
-  },
-  {
-    id: 5,
-    question:
-      "How do JWT signatures protect client-side tokens from tampering, and why is verification critical?",
-  },
-];
-
 const InterviewRoom = () => {
+  // 🔴 MATCHED WITH APP.JSX: extracted 'questionId' instead of 'id'
   const { questionId } = useParams();
   const navigate = useNavigate();
 
+  // LocalStorage-la irunthu mock questions array query extraction block
+  const getQuestionsList = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem("resume_questions_log"));
+      if (parsed && Array.isArray(parsed) && parsed.length > 0) return parsed;
+
+      const alternativeParsed = JSON.parse(
+        localStorage.getItem("interview_questions"),
+      );
+      if (
+        alternativeParsed &&
+        Array.isArray(alternativeParsed) &&
+        alternativeParsed.length > 0
+      )
+        return alternativeParsed;
+    } catch (e) {
+      console.error("Local Storage extraction failed:", e);
+    }
+
+    // Static system layout baseline data
+    return [
+      {
+        id: 1,
+        questionText:
+          "How does the React Virtual DOM optimize UI rendering, and how does reconciliation reduce unnecessary DOM work?",
+      },
+      {
+        id: 2,
+        questionText:
+          "Compare SQL indexes with sequential scans, and explain when each is preferred in production systems.",
+      },
+      {
+        id: 3,
+        questionText:
+          "Describe the Node.js event loop and how asynchronous callbacks are processed across phases.",
+      },
+      {
+        id: 4,
+        questionText:
+          "What are the common RESTful HTTP status code groups and what do they communicate to clients?",
+      },
+      {
+        id: 5,
+        questionText:
+          "How do JWT signatures protect client-side tokens from tampering, and why is verification critical?",
+      },
+    ];
+  };
+
+  const dynamicQuestionsArray = getQuestionsList();
+
+  // 🔴 PARAMETER RESOLUTION MATRIX USING questionId
   const resolvedIndex = Math.max(
     0,
     Math.min(
       (parseInt(questionId || "1", 10) || 1) - 1,
-      mockQuestions.length - 1,
+      dynamicQuestionsArray.length - 1,
     ),
   );
 
   const [activeQuestion, setActiveQuestion] = useState(
-    mockQuestions[resolvedIndex],
+    dynamicQuestionsArray[resolvedIndex],
   );
   const [speechTranscript, setSpeechTranscript] = useState("");
   const [speechChunks, setSpeechChunks] = useState([]);
@@ -57,11 +82,9 @@ const InterviewRoom = () => {
   const synthesisRef = useRef(null);
 
   const speakQuestion = (questionText) => {
-    if (!synthesisRef.current) {
-      return;
-    }
-
+    if (!synthesisRef.current) return;
     synthesisRef.current.cancel();
+
     const utterance = new SpeechSynthesisUtterance(questionText);
     utterance.lang = "en-US";
     utterance.rate = 0.95;
@@ -77,23 +100,24 @@ const InterviewRoom = () => {
   }, []);
 
   useEffect(() => {
-    const currentQuestion = mockQuestions[resolvedIndex] || mockQuestions[0];
+    const currentQuestion =
+      dynamicQuestionsArray[resolvedIndex] || dynamicQuestionsArray[0];
     setActiveQuestion(currentQuestion);
     setSpeechTranscript("");
     setSpeechChunks([]);
-    speakQuestion(currentQuestion.question);
+
+    const textToSpeak =
+      currentQuestion.questionText || currentQuestion.question;
+    speakQuestion(textToSpeak);
 
     return () => {
-      if (synthesisRef.current) {
-        synthesisRef.current.cancel();
-      }
+      if (synthesisRef.current) synthesisRef.current.cancel();
     };
   }, [resolvedIndex]);
 
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-
     if (!SpeechRecognition) {
       setAiStatus("Speech capture is not available in this browser.");
       return undefined;
@@ -152,7 +176,7 @@ const InterviewRoom = () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: false,
+          audio: true,
         });
 
         if (cancelled) {
@@ -169,7 +193,7 @@ const InterviewRoom = () => {
       } catch (error) {
         console.error("Camera access denied", error);
         setCameraError(
-          "Camera permission was not granted. Allow camera access to continue.",
+          "Camera/Microphone permission was not granted. Allow device access to continue.",
         );
       }
     };
@@ -202,6 +226,9 @@ const InterviewRoom = () => {
 
     setSpeechTranscript("");
     setSpeechChunks([]);
+
+    if (synthesisRef.current) synthesisRef.current.cancel();
+
     recognitionRef.current.start();
     setIsRecording(true);
     setAiStatus("Listening for your answer...");
@@ -215,16 +242,16 @@ const InterviewRoom = () => {
 
     setLoadingNext(true);
     setAiStatus("Processing Matrix...");
-    recognitionRef.current?.stop();
+    if (recognitionRef.current) recognitionRef.current.stop();
     setIsRecording(false);
-    synthesisRef.current?.cancel();
+    if (synthesisRef.current) synthesisRef.current.cancel();
 
     const storedResponses = JSON.parse(
       localStorage.getItem("interview_responses_log") || "[]",
     );
     storedResponses.push({
       questionNumber: resolvedIndex + 1,
-      questionText: activeQuestion.question,
+      questionText: activeQuestion.questionText || activeQuestion.question,
       candidateResponse: speechTranscript,
     });
     localStorage.setItem(
@@ -234,7 +261,8 @@ const InterviewRoom = () => {
 
     window.setTimeout(() => {
       setLoadingNext(false);
-      if (resolvedIndex < mockQuestions.length - 1) {
+      if (resolvedIndex < dynamicQuestionsArray.length - 1) {
+        // 🔴 MATCHED ROUTE DIRECTION PATH EXTENSION
         navigate(`/interview/${resolvedIndex + 2}`);
       } else {
         localStorage.setItem("highest_stage", "7");
@@ -251,7 +279,7 @@ const InterviewRoom = () => {
           <div style={headerRowStyle}>
             <div>
               <div style={badgeStyle}>
-                Question {resolvedIndex + 1} of {mockQuestions.length}
+                Question {resolvedIndex + 1} of {dynamicQuestionsArray.length}
               </div>
               <h1 style={titleStyle}>Live Interview Console</h1>
             </div>
@@ -279,7 +307,9 @@ const InterviewRoom = () => {
 
           <div style={questionCardStyle}>
             <div style={sectionLabelStyle}>TARGET TECHNICAL QUESTION</div>
-            <p style={questionTextStyle}>{activeQuestion.question}</p>
+            <p style={questionTextStyle}>
+              {activeQuestion.questionText || activeQuestion.question}
+            </p>
           </div>
 
           <div style={transcriptCardStyle}>
@@ -287,12 +317,9 @@ const InterviewRoom = () => {
               <div style={sectionLabelStyle}>LIVE TRANSCRIPT</div>
               <div style={helperTextStyle}>Speech-only response overlay</div>
             </div>
-            <div
-              style={speechOverlayStyle}
-              aria-live="polite"
-              role="status"
-            >
-              {speechTranscript || "Your spoken answer will appear here in real time."}
+            <div style={speechOverlayStyle} aria-live="polite" role="status">
+              {speechTranscript ||
+                "Your spoken answer will appear here in real time."}
             </div>
           </div>
 
@@ -324,7 +351,7 @@ const InterviewRoom = () => {
             >
               {loadingNext
                 ? "Processing Matrix..."
-                : resolvedIndex < mockQuestions.length - 1
+                : resolvedIndex < dynamicQuestionsArray.length - 1
                   ? "Next"
                   : "Submit Interview"}
             </button>
@@ -372,6 +399,7 @@ const InterviewRoom = () => {
   );
 };
 
+// ================= STYLES ENGINE =================
 const pageStyle = {
   minHeight: "100vh",
   background: "#020617",
@@ -379,7 +407,6 @@ const pageStyle = {
   padding: "24px",
   fontFamily: "Inter, Segoe UI, sans-serif",
 };
-
 const shellStyle = {
   maxWidth: "1400px",
   margin: "0 auto",
@@ -387,7 +414,6 @@ const shellStyle = {
   gridTemplateColumns: "1.4fr 0.8fr",
   gap: "24px",
 };
-
 const leftPanelStyle = {
   background: "#111827",
   border: "1px solid #334155",
@@ -398,7 +424,6 @@ const leftPanelStyle = {
   flexDirection: "column",
   gap: "18px",
 };
-
 const headerRowStyle = {
   display: "flex",
   alignItems: "center",
@@ -407,7 +432,6 @@ const headerRowStyle = {
   paddingBottom: "8px",
   borderBottom: "1px solid #1f2937",
 };
-
 const badgeStyle = {
   display: "inline-flex",
   alignItems: "center",
@@ -421,14 +445,12 @@ const badgeStyle = {
   textTransform: "uppercase",
   width: "fit-content",
 };
-
 const titleStyle = {
   margin: "8px 0 0",
   fontSize: "24px",
   fontWeight: 700,
   color: "#f8fafc",
 };
-
 const statusPillStyle = {
   background: "rgba(56, 189, 248, 0.16)",
   color: "#7dd3fc",
@@ -438,41 +460,35 @@ const statusPillStyle = {
   fontSize: "13px",
   fontWeight: 600,
 };
-
 const metricRowStyle = {
   display: "grid",
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
   gap: "12px",
 };
-
 const metricCardStyle = {
   background: "#1e293b",
   border: "1px solid #334155",
   borderRadius: "14px",
   padding: "12px 14px",
 };
-
 const metricLabelStyle = {
   fontSize: "11px",
   letterSpacing: "0.08em",
   textTransform: "uppercase",
   color: "#94a3b8",
 };
-
 const metricValueStyle = {
   marginTop: "4px",
   fontSize: "15px",
   color: "#f8fafc",
   fontWeight: 600,
 };
-
 const questionCardStyle = {
   background: "#0f172a",
   border: "1px solid #334155",
   borderRadius: "18px",
   padding: "18px",
 };
-
 const sectionLabelStyle = {
   fontSize: "11px",
   letterSpacing: "0.12em",
@@ -480,21 +496,18 @@ const sectionLabelStyle = {
   color: "#64748b",
   marginBottom: "8px",
 };
-
 const questionTextStyle = {
   color: "#f8fafc",
   fontSize: "19px",
   lineHeight: 1.7,
   margin: 0,
 };
-
 const transcriptCardStyle = {
   background: "#0f172a",
   border: "1px solid #334155",
   borderRadius: "18px",
   padding: "16px",
 };
-
 const transcriptHeaderStyle = {
   display: "flex",
   alignItems: "center",
@@ -502,12 +515,7 @@ const transcriptHeaderStyle = {
   gap: "8px",
   marginBottom: "10px",
 };
-
-const helperTextStyle = {
-  fontSize: "12px",
-  color: "#94a3b8",
-};
-
+const helperTextStyle = { fontSize: "12px", color: "#94a3b8" };
 const speechOverlayStyle = {
   width: "100%",
   minHeight: "140px",
@@ -521,14 +529,12 @@ const speechOverlayStyle = {
   lineHeight: 1.6,
   whiteSpace: "pre-wrap",
 };
-
 const actionRowStyle = {
   display: "flex",
   gap: "12px",
   flexWrap: "wrap",
   marginTop: "6px",
 };
-
 const buttonBaseStyle = {
   border: "none",
   borderRadius: "14px",
@@ -538,17 +544,8 @@ const buttonBaseStyle = {
   cursor: "pointer",
   color: "#fff",
 };
-
-const micButtonStyle = {
-  background: "#2563eb",
-  flex: "1 1 220px",
-};
-
-const nextButtonStyle = {
-  background: "#10b981",
-  flex: "1 1 180px",
-};
-
+const micButtonStyle = { background: "#2563eb", flex: "1 1 220px" };
+const nextButtonStyle = { background: "#10b981", flex: "1 1 180px" };
 const cameraPanelStyle = {
   background: "#111827",
   border: "1px solid #334155",
@@ -559,13 +556,11 @@ const cameraPanelStyle = {
   flexDirection: "column",
   gap: "14px",
 };
-
 const cameraHeaderStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
 };
-
 const cameraBadgeStyle = {
   borderRadius: "999px",
   padding: "6px 10px",
@@ -573,7 +568,6 @@ const cameraBadgeStyle = {
   fontSize: "12px",
   fontWeight: 700,
 };
-
 const cameraViewportStyle = {
   position: "relative",
   background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
@@ -585,14 +579,12 @@ const cameraViewportStyle = {
   alignItems: "center",
   justifyContent: "center",
 };
-
 const videoStyle = {
   width: "100%",
   height: "100%",
   objectFit: "cover",
   background: "#020617",
 };
-
 const cameraPlaceholderStyle = {
   position: "absolute",
   inset: 0,
@@ -606,25 +598,12 @@ const cameraPlaceholderStyle = {
   padding: "20px",
   background: "rgba(2, 6, 23, 0.72)",
 };
-
 const cameraErrorStyle = {
   color: "#fda4af",
   fontSize: "13px",
   lineHeight: 1.5,
 };
-
-const cameraHintStyle = {
-  fontSize: "13px",
-  color: "#94a3b8",
-  lineHeight: 1.5,
-};
-
-const responsiveStyles = `
-  @media (max-width: 980px) {
-    .interview-shell {
-      grid-template-columns: 1fr !important;
-    }
-  }
-`;
+const cameraHintStyle = { fontSize: "13px", color: "#94a3b8", lineHeight: 1.5 };
+const responsiveStyles = `@media (max-width: 980px) { .interview-shell { grid-template-columns: 1fr !important; } }`;
 
 export default InterviewRoom;

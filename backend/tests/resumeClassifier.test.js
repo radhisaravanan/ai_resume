@@ -1,15 +1,23 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { classifyResumeText, buildResumeAnalysisResponse } = require('../services/resumeClassifier');
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const {
+  classifyResumeText,
+  buildResumeAnalysisResponse,
+} = require("../services/resumeClassifier");
 
-test('rejects non-resume content with the required payload', () => {
-  const result = classifyResumeText('This is a general essay about history and philosophy.');
+test("rejects non-resume content with the required payload", () => {
+  const result = classifyResumeText(
+    "This is a general essay about history and philosophy.",
+  );
 
   assert.equal(result.isValidResume, false);
-  assert.equal(result.errorMessage, 'This document does not qualify as a valid professional resume. Please upload a properly formatted CV.');
+  assert.equal(
+    result.errorMessage,
+    "This document does not qualify as a valid professional resume. Please upload a properly formatted CV.",
+  );
 });
 
-test('generates five grounded questions for a valid resume', () => {
+test("generates five grounded questions for a valid resume", () => {
   const resumeText = `
   Jane Doe
   Senior Frontend Engineer
@@ -32,6 +40,6 @@ test('generates five grounded questions for a valid resume', () => {
     assert.equal(item.questionNumber, index + 1);
     assert.ok(item.targetSkillOrProject);
     assert.ok(item.questionText);
-    assert.ok(!item.questionText.includes('What is React Hooks?'));
+    assert.ok(!item.questionText.includes("What is React Hooks?"));
   });
 });

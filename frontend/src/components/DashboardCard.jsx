@@ -8,13 +8,13 @@ import "../assets/css/dashboard.css";
 function Dashboard() {
   const navigate = useNavigate();
 
-  // Handle cases where localStorage might be empty
+  // Get logged-in user
   const user = JSON.parse(localStorage.getItem("user")) || {
     full_name: "Candidate",
   };
 
   // ==========================
-  // Start Interview (With Offline Fallback)
+  // Start Interview
   // ==========================
   const startInterview = async () => {
     try {
@@ -23,22 +23,13 @@ function Dashboard() {
       if (response.data.success) {
         navigate(`/interview/${response.data.sessionId}`);
       } else {
-        // Fallback if backend returned false for success
-        console.warn(
-          "Backend was unable to initiate session. Navigating to resume analyzer...",
-        );
-        navigate("/resume");
+        alert(response.data.message || "Unable to start interview.");
       }
     } catch (error) {
-      console.log(
-        "Backend offline or unreachable. Bypassing connection block to start interview...",
-        error,
-      );
+      console.error("Error starting interview:", error);
 
-      // ==========================================
-      // OFFLINE BYPASS: Directs to the start page (/resume) instead of showing an alert
-      // ==========================================
-      navigate("/resume");
+      // Offline fallback
+      navigate("/interview/1");
     }
   };
 
@@ -49,24 +40,28 @@ function Dashboard() {
       <p>AI Voice Interview Dashboard</p>
 
       <div className="dashboard-grid">
+        {/* Resume Analyzer */}
         <div className="dashboard-card" onClick={() => navigate("/resume")}>
           <FaFileAlt size={45} />
           <h3>Upload Resume</h3>
           <p>Upload your resume and let AI analyze your skills.</p>
         </div>
 
+        {/* Start Interview */}
         <div className="dashboard-card" onClick={startInterview}>
           <FaPlay size={45} />
           <h3>Start Interview</h3>
           <p>Begin your AI Interview Session.</p>
         </div>
 
+        {/* History */}
         <div className="dashboard-card" onClick={() => navigate("/history")}>
           <FaHistory size={45} />
           <h3>Interview History</h3>
           <p>View previous interviews and reports.</p>
         </div>
 
+        {/* Profile */}
         <div className="dashboard-card" onClick={() => navigate("/profile")}>
           <FaUser size={45} />
           <h3>Profile</h3>
@@ -74,7 +69,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div style={{ marginTop: "40px" }}>
+      <div style={{ marginTop: "40px", textAlign: "center" }}>
         <FaRobot size={60} />
         <h2>AI Interview Assistant</h2>
       </div>

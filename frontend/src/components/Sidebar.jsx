@@ -38,27 +38,22 @@ function Sidebar() {
       )}
 
       {/* Hamburger Button */}
-      <button
-        className="menu-toggle"
-        onClick={() => setShowSidebar(true)}
-      >
+      <button className="menu-toggle" onClick={() => setShowSidebar(true)}>
         <FaBars />
       </button>
 
       {/* Sidebar */}
       <aside className={`sidebar ${showSidebar ? "show" : ""}`}>
-
         {/* Close Button */}
         <button
-  className={`menu-toggle ${showSidebar ? "hide" : ""}`}
-  onClick={() => setShowSidebar(true)}
->
-  <FaBars />
-</button>
+          className={`menu-toggle ${showSidebar ? "hide" : ""}`}
+          onClick={() => setShowSidebar(true)}
+        >
+          <FaBars />
+        </button>
 
         {/* Logo */}
         <div className="sidebar-logo">
-
           <div className="logo-circle">
             <img
               src={collegeLogo}
@@ -71,12 +66,10 @@ function Sidebar() {
             <h2>MZORA AI</h2>
             <p>Interview Platform</p>
           </div>
-
         </div>
 
         {/* Menu */}
         <nav className="sidebar-menu">
-
           <NavLink
             to="/dashboard"
             className={({ isActive }) =>
@@ -100,7 +93,7 @@ function Sidebar() {
           </NavLink>
 
           <NavLink
-            to="/interviewsetup"
+            to="/interview/1"
             className={({ isActive }) =>
               isActive ? "menu-item active" : "menu-item"
             }
@@ -142,22 +135,15 @@ function Sidebar() {
             <FaCog />
             <span>Settings</span>
           </NavLink>
-
         </nav>
 
         {/* Logout */}
         <div className="sidebar-bottom">
-
-          <button
-            className="logout-btn"
-            onClick={logout}
-          >
+          <button className="logout-btn" onClick={logout}>
             <FaSignOutAlt />
             <span>Logout</span>
           </button>
-
         </div>
-
       </aside>
     </>
   );

@@ -27,14 +27,18 @@ const Login = () => {
         regno: credentials.regno.trim(),
         password: credentials.password,
       });
+      console.log("Login Response:", data);
 
       if (data.success) {
+        console.log("Login successful");
+
         localStorage.setItem("auth_token", data.token);
-        localStorage.setItem("user_regno", credentials.regno.trim());
-        localStorage.setItem("highest_stage", "3"); // Move automatically to resume upload step
-        navigate("/resume");
+        localStorage.setItem("highest_stage", "5");
+
+        console.log("Navigating to dashboard...");
+        navigate("/dashboard");
       } else {
-        setErrorMsg(data.message || "Invalid credentials execution check.");
+        console.log("Login failed");
       }
     } catch (error) {
       setErrorMsg(

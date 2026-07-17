@@ -1,4 +1,5 @@
 // frontend/src/App.jsx
+
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
@@ -7,8 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
-import InterviewSetup from "./pages/InterviewSetup";
-import Permission from "./pages/permission";
+import Permission from "./pages/Permission";
 import Report from "./pages/Report";
 import Features from "./pages/Features";
 import About from "./pages/About";
@@ -17,12 +17,14 @@ import Profile from "./pages/Profile";
 import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 import InterviewRoom from "./pages/InterviewRoom";
+
 import { StageGuard } from "./components/StageGuard";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -30,6 +32,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
 
+        {/* Protected Routes */}
         <Route
           path="/profile"
           element={
@@ -67,15 +70,6 @@ function App() {
         />
 
         <Route
-          path="/permissions"
-          element={
-            <StageGuard requiredStage={4}>
-              <Permission />
-            </StageGuard>
-          }
-        />
-
-        <Route
           path="/dashboard"
           element={
             <StageGuard requiredStage={5}>
@@ -83,8 +77,6 @@ function App() {
             </StageGuard>
           }
         />
-
-        <Route path="/setup" element={<InterviewSetup />} />
 
         <Route
           path="/interview"
@@ -109,6 +101,7 @@ function App() {
           }
         />
 
+        {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

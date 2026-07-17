@@ -18,7 +18,8 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({
         isValidResume: false,
-        errorMessage: "This document does not qualify as a valid professional resume. Please upload a properly formatted CV.",
+        errorMessage:
+          "This document does not qualify as a valid professional resume. Please upload a properly formatted CV.",
       });
     }
 
@@ -31,7 +32,8 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
     console.error("Backend PDF parser failure trace:", error);
     return res.status(400).json({
       isValidResume: false,
-      errorMessage: "This document does not qualify as a valid professional resume. Please upload a properly formatted CV.",
+      errorMessage:
+        "This document does not qualify as a valid professional resume. Please upload a properly formatted CV.",
     });
   }
 });

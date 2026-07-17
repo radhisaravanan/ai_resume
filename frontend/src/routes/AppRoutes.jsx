@@ -21,7 +21,14 @@ function AppRoutes() {
 
         <Route path="/register" element={<Register />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <StageGuard requiredStage={5}>
+              <Dashboard />
+            </StageGuard>
+          }
+        />
 
         <Route path="/profile" element={<Profile />} />
 
