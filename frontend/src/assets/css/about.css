@@ -2,365 +2,167 @@
    ABOUT SECTION
 =========================== */
 
-.about{
+.about {
+    position: relative;
+    min-height: 100vh;
 
-    min-height:100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    display:flex;
+    padding: 80px 8%;
 
-    justify-content:center;
-
-    align-items:center;
-
-    padding:100px 8%;
-
-    position:relative;
-
-    background:
-
-   
-
-    url("../images/collegeimage.jpeg");
-
-
-    background-size:cover;
-
-    background-position:center;
-
-    overflow:hidden;
-
+    background: url("../images/collegeimage.jpeg");
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
 }
 
+/* Dark Overlay */
 
-/* Background Glow */
+.about-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    z-index:1;
+}
+
+/* Blue Glow */
 
 .about::before{
-
     content:"";
-
     position:absolute;
-
-    width:400px;
-
-    height:400px;
-
+    width:450px;
+    height:450px;
     background:#38bdf8;
-
-    opacity:.15;
-
+    opacity:.18;
     border-radius:50%;
-
-    filter:blur(80px);
-
+    filter:blur(100px);
     top:-150px;
-
-    left:-100px;
-
+    left:-120px;
+    z-index:1;
 }
-
 
 /* ===========================
    CONTENT CARD
 =========================== */
 
+.about-center{
 
-.about-right{
-
+    position:relative;
+    z-index:2;
 
     width:900px;
+    max-width:100%;
 
-    padding:50px;
-
+    padding:60px 55px;
 
     text-align:center;
 
+    background:rgba(255,255,255,0.12);
 
-    background:
+  
+    -webkit-backdrop-filter:blur(18px);
 
-    rgba(255,255,255,.12);
-
-
-    backdrop-filter:blur(20px);
-
-    -webkit-backdrop-filter:blur(20px);
-
+    border:1px solid rgba(255,255,255,0.25);
 
     border-radius:30px;
 
-
-    border:1px solid rgba(255,255,255,.25);
-
-
-    box-shadow:
-
-    0 20px 50px rgba(0,0,0,.25);
-
-
-    position:relative;
-
-    z-index:2;
-
+    box-shadow:0 20px 50px rgba(0,0,0,0.4);
 }
-
-
 
 /* ===========================
    TAG
 =========================== */
 
-
 .about-tag{
 
     display:inline-block;
 
+    padding:12px 28px;
 
-    padding:10px 25px;
+    border-radius:40px;
 
+    background:rgba(255,255,255,0.2);
 
-    border-radius:50px;
-
-
-    background:
-
-    rgba(255,255,255,.18);
-
-
-    color:white;
-
+    color:#fff;
 
     font-weight:600;
 
+    font-size:18px;
 
     border:1px solid rgba(255,255,255,.3);
 
-
-    backdrop-filter:blur(10px);
-
-
+    margin-bottom:20px;
 }
-
-
 
 /* ===========================
    HEADING
 =========================== */
 
+.about-center h2{
 
-.about-right h2{
+    font-size:48px;
 
+    color:#ffffff;
 
-    font-size:45px;
+    margin-bottom:25px;
 
-
-    margin:25px 0;
-
-
-    color:rgb(255, 255, 255);
-
+    line-height:1.3;
 
     font-weight:700;
 
-
-    text-shadow:
-
-    0 5px 20px rgba(0,0,0,.5);
-
-
+    text-shadow:0 4px 20px rgba(0,0,0,.5);
 }
-
-
 
 /* ===========================
    PARAGRAPH
 =========================== */
 
+.about-center p{
 
-.about-right p{
+    font-size:20px;
 
+    color:#f8fafc;
 
-    color:rgba(255,255,255,.9);
+    line-height:36px;
 
+    margin-bottom:22px;
 
-    font-size:17px;
+    font-weight:400;
 
-
-    line-height:32px;
-
-
-    max-width:750px;
-
-
-    margin:0 auto 20px;
-
-
+    text-shadow:0 2px 8px rgba(0,0,0,.5);
 }
-
-
-
-/* ===========================
-   BOXES
-=========================== */
-
-
-.about-boxes{
-
-
-    display:flex;
-
-
-    justify-content:center;
-
-
-    gap:25px;
-
-
-    margin-top:35px;
-
-
-}
-
-
-
-.about-box{
-
-
-    width:250px;
-
-
-    padding:25px;
-
-
-    border-radius:22px;
-
-
-    background:
-
-
-    rgba(255,255,255,.15);
-
-
-    backdrop-filter:blur(15px);
-
-
-    border:
-
-    1px solid rgba(255,255,255,.25);
-
-
-    transition:.4s;
-
-
-}
-
-
-
-.about-box:hover{
-
-
-    transform:translateY(-10px);
-
-
-    background:
-
-    rgba(255,255,255,.25);
-
-
-}
-
-
-
-.about-box h3{
-
-
-    color:#89df10;
-
-
-    font-size:25px;
-
-
-    margin-bottom:10px;
-
-
-}
-
-
-
-.about-box p{
-
-
-    color:white;
-
-
-    font-size:15px;
-
-
-    line-height:25px;
-
-
-}
-
-
 
 /* ===========================
    RESPONSIVE
 =========================== */
 
-
-@media(max-width:900px){
-
+@media (max-width:900px){
 
 .about{
 
-
-    padding:70px 5%;
-
+    padding:50px 20px;
 }
 
+.about-center{
 
-
-.about-right{
-
-
-    width:100%;
-
-
-    padding:35px 20px;
-
-
+    padding:35px 25px;
 }
 
+.about-center h2{
 
-
-.about-right h2{
-
-
-    font-size:32px;
-
-
+    font-size:34px;
 }
 
+.about-center p{
 
-
-.about-boxes{
-
-
-    flex-direction:column;
-
-
-    align-items:center;
-
-
+    font-size:17px;
+    line-height:30px;
 }
 
+.about-tag{
 
-
-.about-box{
-
-
-    width:90%;
-
-
+    font-size:16px;
 }
-
-
 }

@@ -24,6 +24,7 @@ import Setup from "./pages/Setup";
 import Features from "./pages/Features";
 
 import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 // FIXED PATH: Pointing back to your pages directory
 import InterviewRoom from "./pages/InterviewRoom";
@@ -86,11 +87,13 @@ function App() {
          <Route path="/Features" element={<Features/>} />
 
           <Route path="/About" element={<About/>} />
+          <Route path="/contact" element={<Contact />} />
 
         {/* ===========================
             404 Page
         =========================== */}
         <Route path="*" element={<NotFound />} />
+        
       </Routes>
     </BrowserRouter>
   );
