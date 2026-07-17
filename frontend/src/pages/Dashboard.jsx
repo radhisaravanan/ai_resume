@@ -26,18 +26,40 @@ function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [loading, setLoading] = useState(false);
 
+  // FIXED: Added full state payload passing inside backend communication lifecycle
   const startInterview = async () => {
     try {
       setLoading(true);
-      const response = await API.post("/interview/start");
+
+      // 1. Safely pull current valid user ID tracking context
+      const currentUserId = user?.id || 1;
+
+      // 2. Map structural values for the selected role & skill targets
+      const currentRole = "Frontend Developer";
+      const currentSkills = ["React", "JavaScript", "HTML", "CSS", "Node.js"];
+
+      console.log("📡 Triggering session startup payload context:", {
+        userId: currentUserId,
+        role: currentRole,
+        skills: currentSkills,
+      });
+
+      // 3. Post explicit parameter payload blocks to the server instance
+      const response = await API.post("/interview/start", {
+        userId: currentUserId,
+        role: currentRole,
+        skills: currentSkills,
+      });
 
       if (response.data.success) {
         localStorage.setItem("sessionId", response.data.sessionId);
         navigate("/setup");
       }
     } catch (error) {
-      console.error(error);
-      alert("Unable to start interview");
+      console.error("❌ Interview session boot failed:", error);
+      const serverMessage =
+        error.response?.data?.message || "Unable to start interview";
+      alert(serverMessage);
     } finally {
       setLoading(false);
     }

@@ -1,586 +1,485 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom"; // Added for routing transitions
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 const InterviewRoom = () => {
+  const { questionId: rawQuestionId } = useParams();
   const navigate = useNavigate();
-  const { sessionId } = useParams(); // Retrieves session ID if defined in the URL route
-  const currentSessionId = sessionId || "latest";
 
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
+  // Route parameters secure calculation validation check
+  const questionId = parseInt(rawQuestionId) || 1;
 
-  // Pipeline steps: 'idle' | 'recording' | 'transcribing' | 'reviewing' | 'completed'
-  const [currentStep, setCurrentStep] = useState("idle");
-  const [currentQuestion, setCurrentQuestion] = useState("");
-  const [transcribedText, setTranscribedText] = useState("");
+  // Core States
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [isListening, setIsListening] = useState(false);
 
-  // Progress & Interview Records
-  const [questionNumber, setQuestionNumber] = useState(1);
-  const [interviewRecord, setInterviewRecord] = useState([]); // List of { question, answer }
-
-  // Ref keeps track of asked questions across re-renders to prevent state lag duplicates
-  const askedQuestionsRef = useRef([]);
-
-  // Final aggregate assessment states
-  const [finalResult, setFinalResult] = useState(null);
-  const [isGrading, setIsGrading] = useState(false);
-
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
+  // Hardware Elements Refs
   const videoRef = useRef(null);
-  const [cameraStream, setCameraStream] = useState(null);
+  const streamRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  // Initialize webcam and fetch Question #1
+  // Safe Parameter Normalization Route Guard
   useEffect(() => {
-    const startWebcam = async () => {
+    if (
+      !rawQuestionId ||
+      rawQuestionId === "undefined" ||
+      isNaN(parseInt(rawQuestionId))
+    ) {
+      console.log(
+        "⚠️ URL parameter tracking invalid string context. Redirecting safely to /interview/1",
+      );
+      navigate("/interview/1", { replace: true });
+    }
+  }, [rawQuestionId, navigate]);
+
+  // 1. Setup Camera Monitor Preview
+  useEffect(() => {
+    const enableWebcam = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
         });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        setCameraStream(stream);
       } catch (err) {
-        console.error("Error accessing webcam:", err);
+        console.warn("Camera could not be initialized:", err);
       }
     };
 
-    startWebcam();
-
-    // Fetch first question with clean slate
-    fetchNextQuestion(1, []);
+    enableWebcam();
 
     return () => {
-      // Clean up camera on unmount
-      if (cameraStream) {
-        cameraStream.getTracks().forEach((track) => track.stop());
-      }
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
-  }, []);
+  }, [questionId]);
 
-  // Text-To-Speech: Speak question aloud safely
-  const speakQuestion = () => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      if (!currentQuestion) return;
-      const utterance = new SpeechSynthesisUtterance(currentQuestion);
-      utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
+  // 2. Setup Robust Voice-to-Text Speech Recognition Engine (Candidate Input)
   useEffect(() => {
-    if (currentQuestion && currentStep === "idle") {
-      speakQuestion();
-    }
-  }, [currentQuestion, currentStep]);
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  // Request next customized, non-repeated question
-  const fetchNextQuestion = async (num, currentAskedList) => {
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/evaluation/next-question",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            questionNumber: num,
-            askedQuestions: currentAskedList,
-          }),
-        },
-      );
-      const data = await response.json();
-      if (data.success && data.question) {
-        setCurrentQuestion(data.question);
-        askedQuestionsRef.current = [...currentAskedList, data.question];
-      } else {
-        const defaultQ =
-          "Can you describe how you structure responsive web layouts?";
-        setCurrentQuestion(defaultQ);
-        askedQuestionsRef.current = [...currentAskedList, defaultQ];
-      }
-    } catch (err) {
-      console.error("Error fetching next question:", err);
-      const fallbackQ =
-        "Explain your experience with standard debugging tools.";
-      setCurrentQuestion(fallbackQ);
-      askedQuestionsRef.current = [...currentAskedList, fallbackQ];
-    }
-  };
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = true;
+      rec.interimResults = true; // Flashes text live as you speak
+      rec.lang = "en-US";
 
-  const startRecording = async () => {
-    audioChunksRef.current = [];
-    setTranscribedText("");
-    setAudioUrl(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
-      });
-      mediaRecorderRef.current = mediaRecorder;
+      rec.onresult = (event) => {
+        let finalTranscript = "";
+        let interimTranscript = "";
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + " ";
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+
+        const currentSpeech = finalTranscript + interimTranscript;
+        if (currentSpeech.trim().length > 0) {
+          setAnswer(currentSpeech);
         }
       };
 
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/wav",
-        });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
+      rec.onerror = (err) => {
+        console.error("❌ Speech API Error:", err.error);
+        if (err.error === "not-allowed") {
+          alert(
+            "Microphone access is blocked! Check your browser address bar permissions icon.",
+          );
+        }
+        setIsListening(false);
       };
 
-      mediaRecorder.start();
-      setIsRecording(true);
-      setCurrentStep("recording");
-    } catch (err) {
-      alert("Microphone access denied.");
+      rec.onend = () => {
+        console.log("Speech engine session paused.");
+      };
+
+      recognitionRef.current = rec;
     }
-  };
 
-  const stopRecording = async () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream
-        .getTracks()
-        .forEach((track) => track.stop());
-      setIsRecording(false);
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      window.speechSynthesis.cancel();
+    };
+  }, [questionId]);
 
-      // Instantly start transcription
-      setCurrentStep("transcribing");
-      setTimeout(() => {
-        handleTranscription();
-      }, 500);
-    }
-  };
+  // 3. Load Dynamic Question Setup + Automatically Speak the Question Out Loud
+  useEffect(() => {
+    if (!rawQuestionId || rawQuestionId === "undefined") return;
 
-  // Convert Voice to Text
-  const handleTranscription = async () => {
-    const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "recording.wav");
-    formData.append("question", currentQuestion);
-    formData.append("interview_id", currentSessionId);
+    const loadQuestionData = async () => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const uploadResponse = await fetch(
-        "http://localhost:5000/api/voice/upload",
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          body: formData,
-        },
+      const resumeText = localStorage.getItem("resumeText") || "";
+
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/interview/question",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              questionId: questionId,
+              resumeText: resumeText,
+            }),
+          },
+        );
+
+        const data = await response.json();
+        if (data.success) {
+          setQuestion(data.question);
+
+          // 📢 TEXT-TO-SPEECH (TTS) SYSTEM TRIGGER
+          window.speechSynthesis.cancel();
+
+          const utterance = new SpeechSynthesisUtterance(data.question);
+          utterance.lang = "en-US";
+          utterance.rate = 0.95; // Professional, clear interviewer pace
+          utterance.pitch = 1.0;
+
+          const voices = window.speechSynthesis.getVoices();
+          const selectedVoice =
+            voices.find(
+              (voice) =>
+                voice.lang.includes("en-US") && voice.name.includes("Google"),
+            ) || voices[0];
+          if (selectedVoice) utterance.voice = selectedVoice;
+
+          window.speechSynthesis.speak(utterance);
+        } else {
+          setError(data.error || "Failed to load the interview question.");
+        }
+      } catch (err) {
+        setError("Could not connect to the interview server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadQuestionData();
+  }, [questionId, rawQuestionId]);
+
+  // Handle Speech Transcription Button Toggle
+  const toggleListening = async () => {
+    if (!recognitionRef.current) {
+      alert(
+        "Speech recognition is not fully configured or supported in this browser. Try Chrome.",
       );
-      const uploadData = await uploadResponse.json();
-      const parsedText = uploadData.success
-        ? uploadData.transcript
-        : "No clear voice answer was transcriptionally matched.";
-
-      setTranscribedText(parsedText);
-      setCurrentStep("reviewing");
-    } catch (error) {
-      console.error("Transcription error:", error);
-      setTranscribedText(
-        "Voice input processing bypass. Manual answer logged.",
-      );
-      setCurrentStep("reviewing");
-    }
-  };
-
-  // Submit Answer & continue to next stage
-  const submitAnswer = async () => {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel(); // Stop talking before switching questions
+      return;
     }
 
-    const finalAnswerText = transcribedText || "No answer registered.";
-    const updatedRecord = [
-      ...interviewRecord,
-      { question: currentQuestion, answer: finalAnswerText },
-    ];
-    setInterviewRecord(updatedRecord);
-
-    // Reset current audio assets
-    setAudioUrl(null);
-    setTranscribedText("");
-    audioChunksRef.current = [];
-
-    if (questionNumber < 10) {
-      const nextNum = questionNumber + 1;
-      setQuestionNumber(nextNum);
-      setCurrentStep("idle");
-      // Synchronously feed the update-locked ref history array
-      fetchNextQuestion(nextNum, askedQuestionsRef.current);
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
     } else {
-      setCurrentStep("completed");
-      await evaluateAllAnswers(updatedRecord);
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Stop narration if it's still running when the user starts speaking
+        if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+        }
+
+        setIsListening(true);
+        recognitionRef.current.start();
+      } catch (micErr) {
+        console.error("Microphone hardware setup block:", micErr);
+        alert(
+          "Microphone permission denied. Enable browser system recording access.",
+        );
+      }
     }
   };
 
-  // Trigger final grading and transition cleanly
-  const evaluateAllAnswers = async (finalRecord) => {
-    setIsGrading(true);
+  // Submit Answer Action
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!answer.trim()) return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+
+    window.speechSynthesis.cancel();
+
+    setSubmitting(true);
+    setError(null);
+
     try {
       const response = await fetch(
-        "http://localhost:5000/api/evaluation/final-grade",
+        "http://localhost:5000/api/interview/answer",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({ interviewData: finalRecord }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            questionId: questionId,
+            answer: answer,
+          }),
         },
       );
+
       const data = await response.json();
-
-      setFinalResult({
-        score: data.score || 75,
-        feedback: data.feedback || "Evaluation processing complete.",
-      });
-
-      // Redirect directly to the dedicated assessment summary view page
-      setTimeout(() => {
-        navigate(`/report/${currentSessionId}`);
-      }, 3000);
+      if (data.success) {
+        setAnswer("");
+        const nextId = questionId + 1;
+        if (nextId <= 5) {
+          navigate(`/interview/${nextId}`);
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
+        setError(data.error || "Failed to submit your answer.");
+      }
     } catch (err) {
-      console.error("Grading failed:", err);
-      setFinalResult({
-        score: 70,
-        feedback:
-          "Routing fallback complete. Redirecting you to your report card...",
-      });
-      setTimeout(() => {
-        navigate(`/report/${currentSessionId}`);
-      }, 3000);
+      setError("Failed to submit answer. Check server connection.");
     } finally {
-      setIsGrading(false);
+      setSubmitting(false);
     }
   };
 
   const styles = {
-    container: {
-      maxWidth: "900px",
-      margin: "40px auto",
-      padding: "30px",
-      backgroundColor: "#ffffff",
-      borderRadius: "16px",
-      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      color: "#1f2937",
-    },
-    header: {
-      fontSize: "24px",
-      fontWeight: "800",
-      textAlign: "center",
-      marginBottom: "20px",
-      borderBottom: "2px solid #f3f4f6",
-      paddingBottom: "16px",
-      color: "#111827",
-    },
-    progressHeader: {
+    layout: {
       display: "flex",
-      justifyContent: "space-between",
+      gap: "30px",
+      maxWidth: "1150px",
+      margin: "50px auto",
+      padding: "0 20px",
+      fontFamily: "'Inter', system-ui, sans-serif",
+    },
+    leftPane: {
+      flex: "1",
+      maxWidth: "320px",
+    },
+    proctorCard: {
+      backgroundColor: "#111827",
+      padding: "20px",
+      borderRadius: "24px",
+      boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+      textAlign: "center",
+      boxSizing: "border-box",
+    },
+    proctorTitle: {
+      color: "#ffffff",
+      fontSize: "13px",
+      fontWeight: "800",
+      letterSpacing: "0.8px",
+      margin: "0 0 15px 0",
+      display: "flex",
       alignItems: "center",
-      fontWeight: "700",
-      color: "#4b5563",
-      marginBottom: "14px",
+      justifyContent: "center",
+      gap: "8px",
     },
-    progressBarOuter: {
+    video: {
       width: "100%",
-      height: "8px",
-      backgroundColor: "#e5e7eb",
-      borderRadius: "9999px",
-      marginBottom: "24px",
-      overflow: "hidden",
-    },
-    progressBarInner: {
-      height: "100%",
-      backgroundColor: "#2563eb",
-      transition: "width 0.4s ease",
-    },
-    layoutGrid: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: "24px",
-      marginBottom: "24px",
-    },
-    cameraFeed: {
-      width: "100%",
-      height: "240px",
+      height: "210px",
+      borderRadius: "16px",
       backgroundColor: "#1f2937",
-      borderRadius: "12px",
       objectFit: "cover",
       transform: "scaleX(-1)",
     },
-    questionBox: {
-      backgroundColor: "#eff6ff",
-      borderLeft: "4px solid #3b82f6",
-      padding: "16px",
-      borderRadius: "8px",
-      position: "relative",
-      marginBottom: "16px",
+    rightPane: {
+      flex: "2",
+      backgroundColor: "#ffffff",
+      borderRadius: "24px",
+      padding: "40px",
+      boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
     },
-    questionLabel: {
-      fontSize: "11px",
-      textTransform: "uppercase",
-      color: "#2563eb",
-      fontWeight: "700",
-      margin: "0 0 4px 0",
-    },
-    questionText: {
-      fontSize: "16px",
-      fontWeight: "600",
-      color: "#1e3a8a",
-      margin: 0,
-      paddingRight: "40px",
-      lineHeight: "1.4",
-    },
-    controlArea: {
+    header: {
       display: "flex",
-      flexDirection: "column",
+      justifyContent: "space-between",
+      alignItems: "center",
+      borderBottom: "1px solid #f1f5f9",
+      paddingBottom: "20px",
+      marginBottom: "25px",
+    },
+    roomTitle: {
+      margin: 0,
+      fontSize: "20px",
+      fontWeight: "800",
+      color: "#0f172a",
+    },
+    badge: {
+      backgroundColor: "#2563eb",
+      color: "#ffffff",
+      padding: "6px 14px",
+      borderRadius: "9999px",
+      fontSize: "12px",
+      fontWeight: "700",
+    },
+    questionBox: {
+      backgroundColor: "#f8fafc",
+      borderLeft: "4px solid #2563eb",
+      padding: "24px",
+      borderRadius: "0 12px 12px 0",
+      fontSize: "18px",
+      lineHeight: "1.6",
+      fontWeight: "700",
+      color: "#0f172a",
+      marginBottom: "30px",
+    },
+    textareaWrapper: {
+      position: "relative",
+      marginBottom: "25px",
+    },
+    textarea: {
+      width: "100%",
+      minHeight: "150px",
+      padding: "20px 60px 20px 20px",
+      borderRadius: "14px",
+      border: "1px solid #cbd5e1",
+      fontSize: "15px",
+      fontFamily: "inherit",
+      boxSizing: "border-box",
+      resize: "vertical",
+      color: "#334155",
+      backgroundColor: "#ffffff",
+      lineHeight: "1.5",
+    },
+    micButton: {
+      position: "absolute",
+      right: "20px",
+      bottom: "20px",
+      backgroundColor: isListening ? "#ef4444" : "#2563eb",
+      color: "#ffffff",
+      border: "none",
+      borderRadius: "50%",
+      width: "44px",
+      height: "44px",
+      cursor: "pointer",
+      display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "20px",
-      backgroundColor: "#f9fafb",
-      borderRadius: "12px",
-      border: "2px dashed #e5e7eb",
+      fontSize: "18px",
+      boxShadow: "0 4px 10px rgba(37, 99, 235, 0.2)",
+      transition: "all 0.2s ease",
     },
-    recordBtn: {
-      padding: "12px 28px",
-      fontSize: "15px",
-      fontWeight: "600",
-      color: "#ffffff",
-      backgroundColor: "#dc2626",
-      border: "none",
-      borderRadius: "9999px",
-      cursor: "pointer",
-    },
-    stopBtn: {
-      padding: "12px 28px",
-      fontSize: "15px",
-      fontWeight: "600",
-      color: "#ffffff",
-      backgroundColor: "#1f2937",
-      border: "none",
-      borderRadius: "9999px",
-      cursor: "pointer",
-    },
-    submitBtn: {
-      width: "100%",
-      padding: "12px",
-      fontSize: "15px",
+    button: {
+      padding: "14px 28px",
+      fontSize: "16px",
       fontWeight: "700",
       color: "#ffffff",
       backgroundColor: "#2563eb",
       border: "none",
-      borderRadius: "8px",
+      borderRadius: "12px",
       cursor: "pointer",
-      marginTop: "12px",
+      boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
+      float: "right",
     },
-    responseReviewArea: {
-      width: "100%",
-      marginTop: "16px",
-      padding: "16px",
-      backgroundColor: "#f0fdf4",
-      border: "1px solid #bbf7d0",
-      borderRadius: "8px",
+    loadingText: {
+      textAlign: "center",
+      fontSize: "18px",
+      color: "#64748b",
+      margin: "40px 0",
     },
   };
 
-  // 1. FINAL RESULT / REDIRECTING SCREEN
-  if (currentStep === "completed") {
+  if (loading) {
     return (
-      <div style={styles.container}>
-        <h2 style={styles.header}>🎓 Interview Completed</h2>
-        <div style={{ textAlign: "center", padding: "40px 0" }}>
-          <p style={{ fontSize: "18px", fontWeight: "700", color: "#4b5563" }}>
-            🧠 Processing performance assessment results...
-          </p>
-          <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "10px" }}>
-            Hold on! We are redirecting you to your interactive assessment
-            report card.
-          </p>
+      <div
+        style={{ ...styles.rightPane, maxWidth: "700px", margin: "100px auto" }}
+      >
+        <div style={styles.loadingText}>
+          Loading dynamic question tracking...
         </div>
       </div>
     );
   }
 
-  // 2. ACTIVE INTERVIEW INTERFACE
   return (
-    <div style={styles.container}>
-      <h2 style={styles.header}>🎙️ Dynamic AI Resume Interview</h2>
-
-      {/* Progress Bar */}
-      <div>
-        <div style={styles.progressHeader}>
-          <span>Structured Technical Stage</span>
-          <span>{questionNumber} / 10 Questions</span>
-        </div>
-        <div style={styles.progressBarOuter}>
-          <div
-            style={{
-              ...styles.progressBarInner,
-              width: `${(questionNumber / 10) * 100}%`,
-            }}
-          />
-        </div>
-      </div>
-
-      <div style={styles.layoutGrid}>
-        <div>
-          <h3
-            style={{
-              fontSize: "14px",
-              fontWeight: "700",
-              marginBottom: "8px",
-              color: "#4b5563",
-            }}
-          >
-            📹 Live Camera
-          </h3>
+    <div style={styles.layout}>
+      {/* MONITOR PANE PANEL */}
+      <div style={styles.leftPane}>
+        <div style={styles.proctorCard}>
+          <p style={styles.proctorTitle}>
+            <span style={{ color: "#ef4444" }}>🔴</span> PROCTOR MONITORING
+            ACTIVE
+          </p>
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            style={styles.cameraFeed}
+            style={styles.video}
           />
         </div>
+      </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <div style={styles.questionBox}>
-              <p style={styles.questionLabel}>
-                Question {questionNumber} of 10
-              </p>
-              <p style={styles.questionText}>
-                {currentQuestion ||
-                  "Analyzing resume to generate custom question..."}
-              </p>
-              <button
-                title="Read out loud"
-                onClick={speakQuestion}
-                style={{
-                  position: "absolute",
-                  right: "16px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: "20px",
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                }}
-              >
-                🔊
-              </button>
-            </div>
-          </div>
-
-          <div style={styles.controlArea}>
-            <div style={{ marginBottom: "10px" }}>
-              {currentStep !== "transcribing" &&
-                (!isRecording ? (
-                  <button onClick={startRecording} style={styles.recordBtn}>
-                    🔴 Start Recording
-                  </button>
-                ) : (
-                  <button onClick={stopRecording} style={styles.stopBtn}>
-                    ⏹️ Stop Recording
-                  </button>
-                ))}
-            </div>
-
-            {currentStep === "transcribing" && (
-              <p style={{ margin: 0, fontWeight: "600", color: "#2563eb" }}>
-                ⚙️ Transcribing your speech... Please hold.
-              </p>
-            )}
-
-            {/* Candidate Review Box (Displays both AUDIO player and TRANSCRIBED text) */}
-            {currentStep === "reviewing" && (
-              <div style={styles.responseReviewArea}>
-                <h4
-                  style={{
-                    margin: "0 0 8px 0",
-                    color: "#166534",
-                    fontSize: "14px",
-                    fontWeight: "700",
-                  }}
-                >
-                  📢 Review Your Captured Answer:
-                </h4>
-
-                {/* 1. Playback Recorded Voice Component */}
-                {audioUrl && (
-                  <div style={{ marginBottom: "12px" }}>
-                    <p
-                      style={{
-                        margin: "0 0 4px 0",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        color: "#15803d",
-                      }}
-                    >
-                      Your Recorded Voice:
-                    </p>
-                    <audio src={audioUrl} controls style={{ width: "100%" }} />
-                  </div>
-                )}
-
-                {/* 2. Text transcription feedback block */}
-                <div>
-                  <p
-                    style={{
-                      margin: "0 0 4px 0",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      color: "#15803d",
-                    }}
-                  >
-                    Transcribed Text:
-                  </p>
-                  <div
-                    style={{
-                      padding: "8px 12px",
-                      backgroundColor: "#ffffff",
-                      borderRadius: "6px",
-                      border: "1px solid #dcfce7",
-                      maxHeight: "100px",
-                      overflowY: "auto",
-                      fontSize: "13px",
-                      color: "#1f2937",
-                      fontStyle: "italic",
-                    }}
-                  >
-                    "{transcribedText || "Thinking..."}"
-                  </div>
-                </div>
-
-                <button onClick={submitAnswer} style={styles.submitBtn}>
-                  Submit Answer & Continue ➡️
-                </button>
-              </div>
-            )}
-          </div>
+      {/* QUESTION CONTENT CARD */}
+      <div style={styles.rightPane}>
+        <div style={styles.header}>
+          <h3 style={styles.roomTitle}>Technical Interview Room</h3>
+          <span style={styles.badge}>Question {questionId} of 5</span>
         </div>
+
+        {error && (
+          <p
+            style={{
+              color: "#dc2626",
+              fontWeight: "600",
+              marginBottom: "15px",
+            }}
+          >
+            ⚠️ {error}
+          </p>
+        )}
+
+        <div style={styles.questionBox}>{question}</div>
+
+        <form onSubmit={handleFormSubmit}>
+          <label
+            style={{
+              fontSize: "11px",
+              fontWeight: "800",
+              color: "#64748b",
+              textTransform: "uppercase",
+              display: "block",
+              marginBottom: "8px",
+              letterSpacing: "0.5px",
+            }}
+          >
+            YOUR ANSWER:
+          </label>
+          <div style={styles.textareaWrapper}>
+            <textarea
+              style={styles.textarea}
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Type your description text or utilize the microphone dictation switch..."
+              required
+            />
+
+            <button
+              type="button"
+              onClick={toggleListening}
+              style={styles.micButton}
+              title={
+                isListening ? "Stop voice dictation" : "Start voice dictation"
+              }
+            >
+              {isListening ? "🛑" : "🎤"}
+            </button>
+          </div>
+
+          <div style={{ overflow: "hidden" }}>
+            <button type="submit" disabled={submitting} style={styles.button}>
+              {submitting ? "Submitting..." : "Submit Answer ➡️"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -8,10 +8,6 @@ const jwt = require("jsonwebtoken");
 exports.register = async (req, res) => {
   const { full_name, regno, phone, college, password } = req.body;
 
-  // Validate all fields
-
-  console.log(req.body);
-console.log({ full_name, regno, phone, college, password });
   if (!full_name || !regno || !phone || !college || !password) {
     return res.status(400).json({
       success: false,
@@ -62,9 +58,9 @@ console.log({ full_name, regno, phone, college, password });
               message: "Registration Successful",
               userId: data.insertId,
             });
-          }
+          },
         );
-      }
+      },
     );
   } catch (error) {
     return res.status(500).json({
@@ -107,9 +103,9 @@ exports.login = (req, res) => {
 
       const user = result[0];
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      const match = await bcrypt.compare(password, user.password);
 
-      if (!isMatch) {
+      if (!match) {
         return res.status(401).json({
           success: false,
           message: "Invalid Password",
@@ -125,7 +121,7 @@ exports.login = (req, res) => {
         process.env.JWT_SECRET,
         {
           expiresIn: "1d",
-        }
+        },
       );
 
       return res.status(200).json({
@@ -141,6 +137,6 @@ exports.login = (req, res) => {
           role: user.role,
         },
       });
-    }
+    },
   );
 };

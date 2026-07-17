@@ -1,6 +1,6 @@
 // frontend/src/App.jsx
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Authentication
 import Home from "./pages/Home";
@@ -57,10 +57,13 @@ function App() {
         <Route path="/permission" element={<Permission />} />
 
         {/* ===========================
-            Interview Room
+            Interview Room (UPDATED PARAMETER KEY)
         =========================== */}
-        <Route path="/interview" element={<InterviewRoom />} />
-        <Route path="/interview/:sessionId" element={<InterviewRoom />} />
+        <Route
+          path="/interview"
+          element={<Navigate to="/interview/1" replace />}
+        />
+        <Route path="/interview/:questionId" element={<InterviewRoom />} />
 
         {/* ===========================
             Final Report
