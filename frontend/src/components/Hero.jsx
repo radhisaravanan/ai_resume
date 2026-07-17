@@ -2,86 +2,79 @@ import { Link } from "react-router-dom";
 import "../assets/css/hero.css";
 
 function Hero() {
+  return (
+    <section className="hero">
 
-    return (
+      <div className="hero-content">
 
-        <section className="hero">
+        {/* Left Content */}
 
-            <div className="hero-content">
+        <div className="hero-left">
 
+          
 
-                {/* LEFT CONTENT */}
+          <h1>
+            Crack Your Dream Job
+            <br />
+            <span>with AI Voice Interview Assistant</span>
+          </h1>
 
-                <div className="hero-left">
+          
 
+          <div className="hero-buttons">
 
+            <Link
+              to="/register"
+              className="btn-primary"
+            >
+              Get Started
+            </Link>
 
-<h1>
-    Crack Your Dream Job
-    <br />
-    <span>with AI Voice Interview Assistant</span>
-</h1>
+            <Link
+              to="/login"
+              className="btn-secondary"
+            >
+              Login
+            </Link>
 
+          </div>
 
+          <div className="hero-stats">
 
-                    <div className="hero-buttons">
-
-
-                        <Link 
-                        to="/register"
-                        className="btn-primary">
-
-                            Get Started
-
-                        </Link>
-
-
-
-                        <Link 
-                        to="/login"
-                        className="btn-secondary">
-
-                            Login
-
-                        </Link>
-
-
-                    </div>
-                    <div className="hero-stats">
-
-    <div className="stat">
-        <h2>5000+</h2>
-        <p>Students</p>
-    </div>
-
-    <div className="stat">
-        <h2>98%</h2>
-        <p>Accuracy</p>
-    </div>
-
-    <div className="stat">
-        <h2>24/7</h2>
-        <p>AI Support</p>
-    </div>
-
-</div>
-
-
-                </div>
-
-
-
-
-
-
+            <div className="stat">
+              <h2>5000+</h2>
+              <p>Students</p>
             </div>
 
+            <div className="stat">
+              <h2>98%</h2>
+              <p>Accuracy</p>
+            </div>
 
-        </section>
+            <div className="stat">
+              <h2>24/7</h2>
+              <p>AI Support</p>
+            </div>
 
-    );
+          </div>
 
+        </div>
+
+        {/* Right Content */}
+
+        <div className="hero-right">
+
+          <img
+            src="/images/ai-interview.png"
+            alt="AI Interview"
+          />
+
+        </div>
+
+      </div>
+
+    </section>
+  );
 }
-
 
 export default Hero;
