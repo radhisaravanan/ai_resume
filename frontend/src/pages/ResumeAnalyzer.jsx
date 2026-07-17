@@ -1,231 +1,110 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 const ResumeAnalyzer = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [skills, setSkills] = useState([]);
-  const [showResultCard, setShowResultCard] = useState(false);
-  const [localMessage, setLocalMessage] = useState("");
+  const [skills, setSkills] = useState(["GENERAL TECHNICAL METRICS"]);
+  const [analysisComplete, setAnalysisComplete] = useState(false); // Shows upload form by default
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+    setErrorMsg("");
   };
 
-  const handleUploadSubmit = async (e) => {
+  const handleUpload = async (e) => {
     e.preventDefault();
     if (!file) {
-      alert("Please select a valid PDF portfolio file template.");
+      setErrorMsg("Please select a valid PDF file first.");
       return;
     }
 
     setLoading(true);
+    setErrorMsg("");
 
     const formData = new FormData();
     formData.append("resume", file);
 
     try {
-      const response = await fetch("http://localhost:5000/api/resume/upload", {
-        method: "POST",
-        body: formData,
+      const { data } = await API.post("/resume/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = await response.json();
-      setLoading(false);
+      if (data.success) {
+        const extractedSkills = data.skills || ["GENERAL TECHNICAL METRICS"];
+        const summaryText = data.summary || "Parsed profile parameter log details.";
+        
+        setSkills(extractedSkills);
+        setAnalysisComplete(true);
 
-      if (response.ok && data.success) {
-        const extractedItems =
-          data.extractedSkills && data.extractedSkills.length > 0
-            ? data.extractedSkills.join(", ")
-            : "NO TECHNICAL MATCHES FOUND";
-
-        // 🎯 Safe execution prompt messaging box metrics sequence
-        alert(
-          `Resume evaluation matrix completed successfully!\n\nExtracted Skills Matrix from your PDF: [ ${extractedItems} ]`,
+        // CRUCIAL STAGE LOCK BRIDGE FOR INTERVIEW ROOM
+        localStorage.setItem(
+          "resume_context",
+          JSON.stringify({ skills: extractedSkills, summary: summaryText })
         );
-
-        setSkills(data.extractedSkills || []);
-        setLocalMessage(extractedItems);
-        setShowResultCard(true);
       } else {
-        alert(data.message || "Extraction failed layers context parsing.");
+        setErrorMsg(data.message || "Failed to parse the uploaded profile asset.");
       }
-    } catch (err) {
+    } catch (error) {
+      setErrorMsg(error.response?.data?.message || error.message || "File upload failed.");
+    } finally {
       setLoading(false);
-      console.error(err);
-      alert("Extraction failed layers interface network path offline.");
     }
   };
 
+  // HANDLER FOR THE INTERFACE BUTTON SHOWN IN YOUR SCREENSHOT
+  const handleProceedToPermissions = () => {
+    // 1. UPDATE STAGE TRACKER TO STAGE 4 (PERMISSIONS) SECURELY BEFORE REDIRECTING
+    localStorage.setItem("highest_stage", "4");
+
+    // 2. NOW TRANSLATE SAFELY WITHOUT HIT BLOCKS BY STAGEGUARD
+    navigate("/permissions");
+  };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f1f5f9",
-        fontFamily: "sans-serif",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#fff",
-          padding: "40px",
-          borderRadius: "16px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          width: "100%",
-          maxWidth: "520px",
-          boxSizing: "border-box",
-        }}
-      >
-        <h3
-          style={{
-            color: "#1e293b",
-            marginBottom: "10px",
-            textAlign: "center",
-            fontSize: "20px",
-            fontWeight: "600",
-          }}
-        >
-          📄 Step 3: Resume Skill Extraction
-        </h3>
-        <p
-          style={{
-            color: "#64748b",
-            fontSize: "14px",
-            textAlign: "center",
-            marginBottom: "24px",
-          }}
-        >
-          Upload your professional engineering profile assets here.
-        </p>
+    <div style={containerStyle}>
+      <div style={cardStyle}>
+        <h2 style={titleStyle}>📄 Step 3: Resume Skill Extraction</h2>
+        <p style={subtitleStyle}>Upload your professional engineering profile assets here.</p>
 
-        {!showResultCard ? (
-          <form onSubmit={handleUploadSubmit}>
-            <div
-              style={{
-                border: "2px dashed #cbd5e1",
-                padding: "40px 20px",
-                borderRadius: "12px",
-                backgroundColor: "#f8fafc",
-                marginBottom: "24px",
-                textAlign: "center",
-              }}
-            >
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                style={{ fontSize: "14px", color: "#475569" }}
-                required
-              />
-            </div>
+        {errorMsg && <div style={errorStyle}>{errorMsg}</div>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: "100%",
-                padding: "14px",
-                backgroundColor: loading ? "#64748b" : "#1e3a8a",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "16px",
-                fontWeight: "600",
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-            >
-              {loading
-                ? "Analyzing Context Matrix..."
-                : "Upload & Analyze Skills"}
+        {!analysisComplete ? (
+          <form onSubmit={handleUpload} style={formStyle}>
+            <input 
+              type="file" 
+              accept=".pdf" 
+              onChange={handleFileChange} 
+              style={fileInputStyle} 
+              required
+            />
+            <button type="submit" disabled={loading} style={buttonStyle}>
+              {loading ? "Processing Assets..." : "Upload & Analyze PDF"}
             </button>
           </form>
         ) : (
-          <div>
-            {/* 🎯 Real-time Data Output Container Card Block display visual */}
-            <div
-              style={{
-                backgroundColor: "#f0fdf4",
-                padding: "24px",
-                borderRadius: "12px",
-                border: "1px solid #bbf7d0",
-                textAlign: "left",
-                marginBottom: "24px",
-              }}
-            >
-              <h4
-                style={{
-                  margin: "0 0 12px 0",
-                  color: "#166534",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                }}
-              >
+          <div style={resultWrapperStyle}>
+            <div style={alertSuccessStyle}>
+              <h5 style={{ color: "#065f46", margin: "0 0 8px 0", fontWeight: "600" }}>
                 ✅ Data Profile Analysis Complete
-              </h4>
-              <p
-                style={{
-                  margin: "0 0 16px 0",
-                  fontSize: "14px",
-                  color: "#374151",
-                  lineHeight: "1.5",
-                }}
-              >
-                The core analytical engine has successfully indexed and parsed
-                your parameters log variables mapping content.
+              </h5>
+              <p style={{ color: "#047857", margin: "0 0 16px 0", fontSize: "14px", lineHeight: "1.5" }}>
+                The core analytical engine has successfully indexed and parsed your parameters log variables mapping content.
               </p>
-
-              <strong
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  color: "#1e293b",
-                  marginBottom: "8px",
-                  textTransform: "uppercase",
-                }}
-              >
-                Extracted Target Skillsets:
-              </strong>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              
+              <label style={tagLabelStyle}>EXTRACTED TARGET SKILLSETS:</label>
+              <div style={chipContainerStyle}>
                 {skills.map((skill, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      backgroundColor: "#dcfce7",
-                      color: "#166534",
-                      padding: "6px 12px",
-                      borderRadius: "6px",
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      border: "1px solid #86efac",
-                    }}
-                  >
-                    {skill}
-                  </span>
+                  <span key={index} style={chipStyle}>{skill}</span>
                 ))}
               </div>
             </div>
 
-            {/* Action transition control routing gate block advance forward to step 4 */}
-            <button
-              onClick={() => navigate("/permissions")}
-              style={{
-                width: "100%",
-                padding: "14px",
-                backgroundColor: "#10b981",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "16px",
-                fontWeight: "600",
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(16,185,129,0.2)",
-              }}
-            >
+            {/* CRUCIAL CONTROL BUTTON ATTACHED TO SAFE DISPATCH ACTION ROUTINE */}
+            <button onClick={handleProceedToPermissions} style={proceedButtonStyle}>
               Proceed to Permissions Gate ➡️
             </button>
           </div>
@@ -234,5 +113,21 @@ const ResumeAnalyzer = () => {
     </div>
   );
 };
+
+// ================= LAYOUT METRICS ARCHITECTURAL STYLES =================
+const containerStyle = { display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", backgroundColor: "#f0f4f8", padding: "20px" };
+const cardStyle = { background: "#ffffff", padding: "40px", borderRadius: "20px", boxShadow: "0 10px 25px rgba(0,0,0,0.05)", maxWidth: "560px", width: "100%", textAlign: "center" };
+const titleStyle = { color: "#1e293b", fontSize: "22px", fontWeight: "700", marginBottom: "8px" };
+const subtitleStyle = { color: "#64748b", fontSize: "14px", marginBottom: "24px" };
+const errorStyle = { backgroundColor: "#fef2f2", color: "#b91c1c", padding: "12px", borderRadius: "8px", marginBottom: "16px", fontSize: "14px" };
+const formStyle = { display: "flex", flexDirection: "column", gap: "16px" };
+const fileInputStyle = { padding: "12px", border: "2px dashed #cbd5e1", borderRadius: "8px", cursor: "pointer", width: "100%", boxSizing: "border-box" };
+const buttonStyle = { padding: "12px", backgroundColor: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600" };
+const resultWrapperStyle = { display: "flex", flexDirection: "column", gap: "20px" };
+const alertSuccessStyle = { backgroundColor: "#ecfdf5", border: "1px solid #a7f3d0", padding: "20px", borderRadius: "12px", textAlign: "left" };
+const tagLabelStyle = { display: "block", fontSize: "12px", fontWeight: "700", color: "#065f46", marginBottom: "8px", letterSpacing: "0.5px" };
+const chipContainerStyle = { display: "flex", flexWrap: "wrap", gap: "8px" };
+const chipStyle = { backgroundColor: "#d1fae5", color: "#065f46", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: "700", border: "1px solid #86efac", letterSpacing: "0.5px" };
+const proceedButtonStyle = { padding: "14px", backgroundColor: "#10b981", color: "#fff", border: "none", borderRadius: "12px", cursor: "pointer", fontWeight: "700", fontSize: "15px", boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)" };
 
 export default ResumeAnalyzer;

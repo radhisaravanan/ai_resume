@@ -46,12 +46,17 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
       }
     });
 
-    // 🚀 Success execution response parameters matching frontend expectation
+    const skills = foundSkills.length > 0 ? foundSkills : ["GENERAL TECHNICAL METRICS"];
+    const summary = `Candidate demonstrates strong technical foundational capabilities with direct alignment in ${skills.slice(0, 3).join(", ")}.`;
+
+    // 🚀 Success execution response — returns both `skills` (new) and `extractedSkills` (legacy compat)
     return res.status(200).json({
       success: true,
       message: "Resume evaluation matrix completed successfully!",
-      extractedSkills:
-        foundSkills.length > 0 ? foundSkills : ["GENERAL TECHNICAL METRICS"],
+      skills,
+      summary,
+      rawText: extractedText,
+      extractedSkills: skills,
     });
   } catch (error) {
     console.error("Backend PDF parser failure trace:", error);
