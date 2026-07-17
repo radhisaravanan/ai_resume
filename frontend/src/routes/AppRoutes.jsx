@@ -11,13 +11,10 @@ import Report from "../pages/Report";
 import History from "../pages/History";
 import ResumeAnalyzer from "../pages/ResumeAnalyzer";
 
-
-
 function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-
         <Route path="/" element={<Home />} />
 
         <Route path="/login" element={<Login />} />
@@ -28,24 +25,16 @@ function AppRoutes() {
 
         <Route path="/profile" element={<Profile />} />
 
-        <Route
-          path="/InterviewSetup"
-          element={<InterviewSetup />}
-        />
+        <Route path="/InterviewSetup" element={<InterviewSetup />} />
 
-      <Route path="/report" element={<Report />} />
-      <Route path="/interview" element={<InterviewRoom />} />
-      <Route path="/interview/:questionId" element={<InterviewRoom />} />
-   <Route path="/permission"
-    element={<Permission />}
-/>
+        <Route path="/report" element={<Report />} />
+        <Route path="/interview" element={<InterviewRoom />} />
+        <Route path="/interview/:questionId" element={<InterviewRoom />} />
+        <Route path="/permission" element={<Permission />} />
 
-<Route
-path="/resume"
-element={<ResumeAnalyzer />}
-/>
+        <Route path="/resume" element={<ResumeAnalyzer />} />
 
-<Route path="/history" element={<History />} />
+        <Route path="/history" element={<History />} />
       </Routes>
     </BrowserRouter>
   );

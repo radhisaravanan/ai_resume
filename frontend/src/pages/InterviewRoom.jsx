@@ -35,11 +35,17 @@ const InterviewRoom = () => {
 
   const resolvedIndex = Math.max(
     0,
-    Math.min((parseInt(questionId || "1", 10) || 1) - 1, mockQuestions.length - 1)
+    Math.min(
+      (parseInt(questionId || "1", 10) || 1) - 1,
+      mockQuestions.length - 1,
+    ),
   );
 
-  const [activeQuestion, setActiveQuestion] = useState(mockQuestions[resolvedIndex]);
-  const [userTranscript, setUserTranscript] = useState("");
+  const [activeQuestion, setActiveQuestion] = useState(
+    mockQuestions[resolvedIndex],
+  );
+  const [speechTranscript, setSpeechTranscript] = useState("");
+  const [speechChunks, setSpeechChunks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
   const [aiStatus, setAiStatus] = useState("Initializing voice stack...");
@@ -61,7 +67,8 @@ const InterviewRoom = () => {
     utterance.rate = 0.95;
     utterance.pitch = 1;
     utterance.onstart = () => setAiStatus("Speaking target question...");
-    utterance.onend = () => setAiStatus("Capture ready. Press start to answer.");
+    utterance.onend = () =>
+      setAiStatus("Capture ready. Press start to answer.");
     synthesisRef.current.speak(utterance);
   };
 
@@ -72,7 +79,8 @@ const InterviewRoom = () => {
   useEffect(() => {
     const currentQuestion = mockQuestions[resolvedIndex] || mockQuestions[0];
     setActiveQuestion(currentQuestion);
-    setUserTranscript("");
+    setSpeechTranscript("");
+    setSpeechChunks([]);
     speakQuestion(currentQuestion.question);
 
     return () => {
@@ -83,7 +91,8 @@ const InterviewRoom = () => {
   }, [resolvedIndex]);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setAiStatus("Speech capture is not available in this browser.");
@@ -103,7 +112,12 @@ const InterviewRoom = () => {
         .trim();
 
       if (transcript) {
-        setUserTranscript((prev) => (prev ? `${prev} ` : "") + transcript);
+        setSpeechChunks((prevChunks) => {
+          const nextChunks = [...prevChunks, transcript];
+          const joined = nextChunks.join(" ").trim();
+          setSpeechTranscript(joined);
+          return nextChunks;
+        });
       }
     };
 
@@ -136,7 +150,10 @@ const InterviewRoom = () => {
       }
 
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
 
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
@@ -151,7 +168,9 @@ const InterviewRoom = () => {
         setCameraError("");
       } catch (error) {
         console.error("Camera access denied", error);
-        setCameraError("Camera permission was not granted. Allow camera access to continue.");
+        setCameraError(
+          "Camera permission was not granted. Allow camera access to continue.",
+        );
       }
     };
 
@@ -181,15 +200,16 @@ const InterviewRoom = () => {
       return;
     }
 
-    setUserTranscript("");
+    setSpeechTranscript("");
+    setSpeechChunks([]);
     recognitionRef.current.start();
     setIsRecording(true);
     setAiStatus("Listening for your answer...");
   };
 
   const handleNextOrSubmit = () => {
-    if (!userTranscript.trim()) {
-      alert("Please provide an answer before moving forward.");
+    if (!speechTranscript.trim()) {
+      setAiStatus("Speak to capture a transcript before continuing.");
       return;
     }
 
@@ -199,13 +219,18 @@ const InterviewRoom = () => {
     setIsRecording(false);
     synthesisRef.current?.cancel();
 
-    const storedResponses = JSON.parse(localStorage.getItem("interview_responses_log") || "[]");
+    const storedResponses = JSON.parse(
+      localStorage.getItem("interview_responses_log") || "[]",
+    );
     storedResponses.push({
       questionNumber: resolvedIndex + 1,
       questionText: activeQuestion.question,
-      candidateResponse: userTranscript,
+      candidateResponse: speechTranscript,
     });
-    localStorage.setItem("interview_responses_log", JSON.stringify(storedResponses));
+    localStorage.setItem(
+      "interview_responses_log",
+      JSON.stringify(storedResponses),
+    );
 
     window.setTimeout(() => {
       setLoadingNext(false);
@@ -225,7 +250,9 @@ const InterviewRoom = () => {
         <section style={leftPanelStyle}>
           <div style={headerRowStyle}>
             <div>
-              <div style={badgeStyle}>Question {resolvedIndex + 1} of {mockQuestions.length}</div>
+              <div style={badgeStyle}>
+                Question {resolvedIndex + 1} of {mockQuestions.length}
+              </div>
               <h1 style={titleStyle}>Live Interview Console</h1>
             </div>
             <div style={statusPillStyle}>{aiStatus}</div>
@@ -238,11 +265,15 @@ const InterviewRoom = () => {
             </div>
             <div style={metricCardStyle}>
               <div style={metricLabelStyle}>Capture</div>
-              <div style={metricValueStyle}>{isRecording ? "Listening" : "Idle"}</div>
+              <div style={metricValueStyle}>
+                {isRecording ? "Listening" : "Idle"}
+              </div>
             </div>
             <div style={metricCardStyle}>
               <div style={metricLabelStyle}>Status</div>
-              <div style={metricValueStyle}>{loadingNext ? "Processing" : "Ready"}</div>
+              <div style={metricValueStyle}>
+                {loadingNext ? "Processing" : "Ready"}
+              </div>
             </div>
           </div>
 
@@ -254,14 +285,15 @@ const InterviewRoom = () => {
           <div style={transcriptCardStyle}>
             <div style={transcriptHeaderStyle}>
               <div style={sectionLabelStyle}>LIVE TRANSCRIPT</div>
-              <div style={helperTextStyle}>Editable response buffer</div>
+              <div style={helperTextStyle}>Speech-only response overlay</div>
             </div>
-            <textarea
-              value={userTranscript}
-              onChange={(event) => setUserTranscript(event.target.value)}
-              placeholder="Speak naturally or type your answer here..."
-              style={textAreaStyle}
-            />
+            <div
+              style={speechOverlayStyle}
+              aria-live="polite"
+              role="status"
+            >
+              {speechTranscript || "Your spoken answer will appear here in real time."}
+            </div>
           </div>
 
           <div style={actionRowStyle}>
@@ -275,17 +307,19 @@ const InterviewRoom = () => {
                 background: isRecording ? "#dc2626" : "#2563eb",
               }}
             >
-              {isRecording ? "Stop Capture Microphone" : "Start Capture Microphone"}
+              {isRecording
+                ? "Stop Capture Microphone"
+                : "Start Capture Microphone"}
             </button>
 
             <button
               type="button"
               onClick={handleNextOrSubmit}
-              disabled={loadingNext}
+              disabled={loadingNext || !speechTranscript.trim()}
               style={{
                 ...buttonBaseStyle,
                 ...nextButtonStyle,
-                opacity: loadingNext ? 0.8 : 1,
+                opacity: loadingNext || !speechTranscript.trim() ? 0.65 : 1,
               }}
             >
               {loadingNext
@@ -300,20 +334,37 @@ const InterviewRoom = () => {
         <aside style={cameraPanelStyle}>
           <div style={cameraHeaderStyle}>
             <div style={sectionLabelStyle}>CAMERA OVERLAY</div>
-            <div style={{ ...cameraBadgeStyle, background: cameraReady ? "#16a34a" : "#64748b" }}>
+            <div
+              style={{
+                ...cameraBadgeStyle,
+                background: cameraReady ? "#16a34a" : "#64748b",
+              }}
+            >
               {cameraReady ? "LIVE" : "WAITING"}
             </div>
           </div>
 
           <div style={cameraViewportStyle}>
-            <video ref={videoRef} autoPlay playsInline muted style={videoStyle} />
-            {!cameraReady && <div style={cameraPlaceholderStyle}>Grant camera access to begin</div>}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={videoStyle}
+            />
+            {!cameraReady && (
+              <div style={cameraPlaceholderStyle}>
+                Grant camera access to begin
+              </div>
+            )}
           </div>
 
           {cameraError ? (
             <div style={cameraErrorStyle}>{cameraError}</div>
           ) : (
-            <div style={cameraHintStyle}>Local stream is attached directly to the live overlay surface.</div>
+            <div style={cameraHintStyle}>
+              Local stream is attached directly to the live overlay surface.
+            </div>
           )}
         </aside>
       </div>
@@ -457,7 +508,7 @@ const helperTextStyle = {
   color: "#94a3b8",
 };
 
-const textAreaStyle = {
+const speechOverlayStyle = {
   width: "100%",
   minHeight: "140px",
   background: "#111827",
@@ -466,9 +517,9 @@ const textAreaStyle = {
   borderRadius: "14px",
   padding: "14px",
   fontSize: "14px",
-  resize: "vertical",
   boxSizing: "border-box",
   lineHeight: 1.6,
+  whiteSpace: "pre-wrap",
 };
 
 const actionRowStyle = {

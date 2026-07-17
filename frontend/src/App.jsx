@@ -1,51 +1,34 @@
+// frontend/src/App.jsx
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// Authentication
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-
-// Interview Flow
-import ResumeAnalyzer from "./pages/ResumeAnalyzer";
-import Permission from "./pages/permission";
 import Dashboard from "./pages/Dashboard";
-import InterviewRoom from "./pages/InterviewRoom";
+import ResumeAnalyzer from "./pages/ResumeAnalyzer";
+import InterviewSetup from "./pages/InterviewSetup";
+import Permission from "./pages/permission";
 import Report from "./pages/Report";
-
-// Other Pages
 import Features from "./pages/Features";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Profile from "./pages/Profile";
 import History from "./pages/History";
 import NotFound from "./pages/NotFound";
-
+import InterviewRoom from "./pages/InterviewRoom";
 import { StageGuard } from "./components/StageGuard";
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* ===========================
-            Public Routes
-        =========================== */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
         <Route path="/features" element={<Features />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-
-        {/* ===========================
-            Protected Routes
-        =========================== */}
 
         <Route
           path="/profile"
@@ -75,6 +58,15 @@ function App() {
         />
 
         <Route
+          path="/permission"
+          element={
+            <StageGuard requiredStage={4}>
+              <Permission />
+            </StageGuard>
+          }
+        />
+
+        <Route
           path="/permissions"
           element={
             <StageGuard requiredStage={4}>
@@ -91,6 +83,8 @@ function App() {
             </StageGuard>
           }
         />
+
+        <Route path="/setup" element={<InterviewSetup />} />
 
         <Route
           path="/interview"
@@ -115,12 +109,9 @@ function App() {
           }
         />
 
-        {/* ===========================
-            404 Page
-        =========================== */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 

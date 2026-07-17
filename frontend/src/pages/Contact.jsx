@@ -1,85 +1,132 @@
-import { FaEnvelope, FaPhoneAlt, FaMapMarkerAlt } from "react-icons/fa";
 import "../assets/css/contact.css";
 
+import {
+  FaGlobe,
+  FaEnvelope,
+  FaPhone,
+  FaFacebook,
+  FaInstagram,
+  FaLinkedin,
+  FaMapMarkerAlt
+} from "react-icons/fa";
+
 function Contact() {
-    return (
-        <section className="contact" id="contact">
+  return (
+    <section className="contact">
 
-            <div className="contact-title">
-                <h2>Contact Us</h2>
-                <p>
-                    Have questions? We'd love to hear from you.
-                </p>
-            </div>
+      <div className="contact-overlay"></div>
 
-            <div className="contact-container">
+      <div className="contact-container">
 
-                {/* Contact Information */}
+        <span className="contact-tag">
+          Contact Us
+        </span>
 
-                <div className="contact-info">
+        <h2>
+          Mount Zion College of Engineering and Technology
+        </h2>
 
-                    <div className="info-card">
-                        <FaEnvelope className="info-icon" />
-                        <h3>Email</h3>
-                        <p>support@aiinterview.com</p>
-                    </div>
+        <p className="contact-description">
+          We'd love to hear from you. Feel free to contact us for
+          admissions, technical support, placement assistance,
+          or any queries related to our AI Interview Platform.
+        </p>
 
-                    <div className="info-card">
-                        <FaPhoneAlt className="info-icon" />
-                        <h3>Phone</h3>
-                        <p>+91 98765 43210</p>
-                    </div>
+        <div className="contact-grid">
 
-                    <div className="info-card">
-                        <FaMapMarkerAlt className="info-icon" />
-                        <h3>Address</h3>
-                        <p>Chennai, Tamil Nadu, India</p>
-                    </div>
+          <div className="contact-card">
+            <FaGlobe className="contact-icon" />
+            <h3>Website</h3>
 
-                </div>
+            <a
+              href="https://www.mzcet.in"
+              target="_blank"
+              rel="noreferrer"
+            >
+              www.mzcet.in
+            </a>
+          </div>
 
-                {/* Contact Form */}
+          <div className="contact-card">
+            <FaEnvelope className="contact-icon" />
+            <h3>Email</h3>
 
-                <div className="contact-form">
+            <a href="mailto:info@mzcet.in">
+              info@mzcet.in
+            </a>
+          </div>
 
-                    <form>
+          <div className="contact-card">
+            <FaPhone className="contact-icon" />
+            <h3>Phone</h3>
 
-                        <input
-                            type="text"
-                            placeholder="Your Name"
-                            required
-                        />
+            <a href="tel:+917373344444">
+              +91 73733 44444
+            </a>
+          </div>
 
-                        <input
-                            type="email"
-                            placeholder="Your Email"
-                            required
-                        />
+          <div className="contact-card">
+            <FaFacebook className="contact-icon" />
+            <h3>Facebook</h3>
 
-                        <input
-                            type="text"
-                            placeholder="Subject"
-                            required
-                        />
+            <a
+              href="https://www.facebook.com/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Mount Zion College of Engineering
+            </a>
+          </div>
 
-                        <textarea
-                            rows="6"
-                            placeholder="Your Message"
-                            required
-                        ></textarea>
+          <div className="contact-card">
+            <FaInstagram className="contact-icon" />
+            <h3>Instagram</h3>
 
-                        <button type="submit">
-                            Send Message
-                        </button>
+            <a
+              href="https://www.instagram.com/mountzioncet"
+              target="_blank"
+              rel="noreferrer"
+            >
+              @mountzioncet
+            </a>
+          </div>
 
-                    </form>
+          <div className="contact-card">
+            <FaLinkedin className="contact-icon" />
+            <h3>LinkedIn</h3>
 
-                </div>
+            <a
+              href="https://www.linkedin.com/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Mount Zion College of Engineering
+            </a>
+          </div>
 
-            </div>
+        </div>
 
-        </section>
-    );
+        <div className="address-box">
+
+          <FaMapMarkerAlt className="address-icon" />
+
+          <div>
+            <h3>Address</h3>
+
+            <p>
+              Mount Zion College of Engineering and Technology
+              <br />
+              Pudukkottai, Tamil Nadu, India
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+  );
 }
 
 export default Contact;
