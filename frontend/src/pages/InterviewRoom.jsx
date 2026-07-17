@@ -1,488 +1,579 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+const mockQuestions = [
+  {
+    id: 1,
+    question:
+      "How does the React Virtual DOM optimize UI rendering, and how does reconciliation reduce unnecessary DOM work?",
+  },
+  {
+    id: 2,
+    question:
+      "Compare SQL indexes with sequential scans, and explain when each is preferred in production systems.",
+  },
+  {
+    id: 3,
+    question:
+      "Describe the Node.js event loop and how asynchronous callbacks are processed across phases.",
+  },
+  {
+    id: 4,
+    question:
+      "What are the common RESTful HTTP status code groups and what do they communicate to clients?",
+  },
+  {
+    id: 5,
+    question:
+      "How do JWT signatures protect client-side tokens from tampering, and why is verification critical?",
+  },
+];
 
 const InterviewRoom = () => {
-  const { questionId: rawQuestionId } = useParams();
+  const { questionId } = useParams();
   const navigate = useNavigate();
 
-  // Route parameters secure calculation validation check
-  const questionId = parseInt(rawQuestionId) || 1;
+  const resolvedIndex = Math.max(
+    0,
+    Math.min((parseInt(questionId || "1", 10) || 1) - 1, mockQuestions.length - 1)
+  );
 
-  // Core States
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [isListening, setIsListening] = useState(false);
+  const [activeQuestion, setActiveQuestion] = useState(mockQuestions[resolvedIndex]);
+  const [userTranscript, setUserTranscript] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [loadingNext, setLoadingNext] = useState(false);
+  const [aiStatus, setAiStatus] = useState("Initializing voice stack...");
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState("");
 
-  // Hardware Elements Refs
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
   const recognitionRef = useRef(null);
+  const synthesisRef = useRef(null);
 
-  // Safe Parameter Normalization Route Guard
-  useEffect(() => {
-    if (
-      !rawQuestionId ||
-      rawQuestionId === "undefined" ||
-      isNaN(parseInt(rawQuestionId))
-    ) {
-      console.log(
-        "⚠️ URL parameter tracking invalid string context. Redirecting safely to /interview/1",
-      );
-      navigate("/interview/1", { replace: true });
-    }
-  }, [rawQuestionId, navigate]);
-
-  // 1. Setup Camera Monitor Preview
-  useEffect(() => {
-    const enableWebcam = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (err) {
-        console.warn("Camera could not be initialized:", err);
-      }
-    };
-
-    enableWebcam();
-
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [questionId]);
-
-  // 2. Setup Robust Voice-to-Text Speech Recognition Engine (Candidate Input)
-  useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (SpeechRecognition) {
-      const rec = new SpeechRecognition();
-      rec.continuous = true;
-      rec.interimResults = true; // Flashes text live as you speak
-      rec.lang = "en-US";
-
-      rec.onresult = (event) => {
-        let finalTranscript = "";
-        let interimTranscript = "";
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + " ";
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-
-        const currentSpeech = finalTranscript + interimTranscript;
-        if (currentSpeech.trim().length > 0) {
-          setAnswer(currentSpeech);
-        }
-      };
-
-      rec.onerror = (err) => {
-        console.error("❌ Speech API Error:", err.error);
-        if (err.error === "not-allowed") {
-          alert(
-            "Microphone access is blocked! Check your browser address bar permissions icon.",
-          );
-        }
-        setIsListening(false);
-      };
-
-      rec.onend = () => {
-        console.log("Speech engine session paused.");
-      };
-
-      recognitionRef.current = rec;
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      window.speechSynthesis.cancel();
-    };
-  }, [questionId]);
-
-  // 3. Load Dynamic Question Setup + Automatically Speak the Question Out Loud
-  useEffect(() => {
-    if (!rawQuestionId || rawQuestionId === "undefined") return;
-
-    const loadQuestionData = async () => {
-      setLoading(true);
-      setError(null);
-
-      const resumeText = localStorage.getItem("resumeText") || "";
-
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/interview/question",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              questionId: questionId,
-              resumeText: resumeText,
-            }),
-          },
-        );
-
-        const data = await response.json();
-        if (data.success) {
-          setQuestion(data.question);
-
-          // 📢 TEXT-TO-SPEECH (TTS) SYSTEM TRIGGER
-          window.speechSynthesis.cancel();
-
-          const utterance = new SpeechSynthesisUtterance(data.question);
-          utterance.lang = "en-US";
-          utterance.rate = 0.95; // Professional, clear interviewer pace
-          utterance.pitch = 1.0;
-
-          const voices = window.speechSynthesis.getVoices();
-          const selectedVoice =
-            voices.find(
-              (voice) =>
-                voice.lang.includes("en-US") && voice.name.includes("Google"),
-            ) || voices[0];
-          if (selectedVoice) utterance.voice = selectedVoice;
-
-          window.speechSynthesis.speak(utterance);
-        } else {
-          setError(data.error || "Failed to load the interview question.");
-        }
-      } catch (err) {
-        setError("Could not connect to the interview server.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadQuestionData();
-  }, [questionId, rawQuestionId]);
-
-  // Handle Speech Transcription Button Toggle
-  const toggleListening = async () => {
-    if (!recognitionRef.current) {
-      alert(
-        "Speech recognition is not fully configured or supported in this browser. Try Chrome.",
-      );
+  const speakQuestion = (questionText) => {
+    if (!synthesisRef.current) {
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
+    synthesisRef.current.cancel();
+    const utterance = new SpeechSynthesisUtterance(questionText);
+    utterance.lang = "en-US";
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.onstart = () => setAiStatus("Speaking target question...");
+    utterance.onend = () => setAiStatus("Capture ready. Press start to answer.");
+    synthesisRef.current.speak(utterance);
+  };
+
+  useEffect(() => {
+    synthesisRef.current = window.speechSynthesis;
+  }, []);
+
+  useEffect(() => {
+    const currentQuestion = mockQuestions[resolvedIndex] || mockQuestions[0];
+    setActiveQuestion(currentQuestion);
+    setUserTranscript("");
+    speakQuestion(currentQuestion.question);
+
+    return () => {
+      if (synthesisRef.current) {
+        synthesisRef.current.cancel();
+      }
+    };
+  }, [resolvedIndex]);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setAiStatus("Speech capture is not available in this browser.");
+      return undefined;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .slice(event.resultIndex)
+        .map((result) => result[0].transcript)
+        .join(" ")
+        .trim();
+
+      if (transcript) {
+        setUserTranscript((prev) => (prev ? `${prev} ` : "") + transcript);
+      }
+    };
+
+    recognition.onerror = (error) => {
+      console.error("Speech recognition error", error);
+      setAiStatus("Capture interrupted. Please try again.");
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.stop();
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    let stream = null;
+    let cancelled = false;
+
+    const requestCamera = async () => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError("Camera access is unavailable in this browser.");
+        return;
+      }
+
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
 
-        // Stop narration if it's still running when the user starts speaking
-        if (window.speechSynthesis.speaking) {
-          window.speechSynthesis.cancel();
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
         }
 
-        setIsListening(true);
-        recognitionRef.current.start();
-      } catch (micErr) {
-        console.error("Microphone hardware setup block:", micErr);
-        alert(
-          "Microphone permission denied. Enable browser system recording access.",
-        );
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+
+        setCameraReady(true);
+        setCameraError("");
+      } catch (error) {
+        console.error("Camera access denied", error);
+        setCameraError("Camera permission was not granted. Allow camera access to continue.");
       }
+    };
+
+    requestCamera();
+
+    return () => {
+      cancelled = true;
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, []);
+
+  const toggleRecording = () => {
+    if (!recognitionRef.current) {
+      setAiStatus("Speech capture is not supported on this device.");
+      return;
     }
-  };
 
-  // Submit Answer Action
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    if (!answer.trim()) return;
-
-    if (isListening && recognitionRef.current) {
+    if (isRecording) {
       recognitionRef.current.stop();
-      setIsListening(false);
+      setIsRecording(false);
+      setAiStatus("Capture paused.");
+      return;
     }
 
-    window.speechSynthesis.cancel();
+    setUserTranscript("");
+    recognitionRef.current.start();
+    setIsRecording(true);
+    setAiStatus("Listening for your answer...");
+  };
 
-    setSubmitting(true);
-    setError(null);
+  const handleNextOrSubmit = () => {
+    if (!userTranscript.trim()) {
+      alert("Please provide an answer before moving forward.");
+      return;
+    }
 
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/interview/answer",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            questionId: questionId,
-            answer: answer,
-          }),
-        },
-      );
+    setLoadingNext(true);
+    setAiStatus("Processing Matrix...");
+    recognitionRef.current?.stop();
+    setIsRecording(false);
+    synthesisRef.current?.cancel();
 
-      const data = await response.json();
-      if (data.success) {
-        setAnswer("");
-        const nextId = questionId + 1;
-        if (nextId <= 5) {
-          navigate(`/interview/${nextId}`);
-        } else {
-          navigate("/dashboard");
-        }
+    const storedResponses = JSON.parse(localStorage.getItem("interview_responses_log") || "[]");
+    storedResponses.push({
+      questionNumber: resolvedIndex + 1,
+      questionText: activeQuestion.question,
+      candidateResponse: userTranscript,
+    });
+    localStorage.setItem("interview_responses_log", JSON.stringify(storedResponses));
+
+    window.setTimeout(() => {
+      setLoadingNext(false);
+      if (resolvedIndex < mockQuestions.length - 1) {
+        navigate(`/interview/${resolvedIndex + 2}`);
       } else {
-        setError(data.error || "Failed to submit your answer.");
+        localStorage.setItem("highest_stage", "7");
+        navigate("/report");
       }
-    } catch (err) {
-      setError("Failed to submit answer. Check server connection.");
-    } finally {
-      setSubmitting(false);
-    }
+    }, 1200);
   };
-
-  const styles = {
-    layout: {
-      display: "flex",
-      gap: "30px",
-      maxWidth: "1150px",
-      margin: "50px auto",
-      padding: "0 20px",
-      fontFamily: "'Inter', system-ui, sans-serif",
-    },
-    leftPane: {
-      flex: "1",
-      maxWidth: "320px",
-    },
-    proctorCard: {
-      backgroundColor: "#111827",
-      padding: "20px",
-      borderRadius: "24px",
-      boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-      textAlign: "center",
-      boxSizing: "border-box",
-    },
-    proctorTitle: {
-      color: "#ffffff",
-      fontSize: "13px",
-      fontWeight: "800",
-      letterSpacing: "0.8px",
-      margin: "0 0 15px 0",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "8px",
-    },
-    video: {
-      width: "100%",
-      height: "210px",
-      borderRadius: "16px",
-      backgroundColor: "#1f2937",
-      objectFit: "cover",
-      transform: "scaleX(-1)",
-    },
-    rightPane: {
-      flex: "2",
-      backgroundColor: "#ffffff",
-      borderRadius: "24px",
-      padding: "40px",
-      boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-    },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      borderBottom: "1px solid #f1f5f9",
-      paddingBottom: "20px",
-      marginBottom: "25px",
-    },
-    roomTitle: {
-      margin: 0,
-      fontSize: "20px",
-      fontWeight: "800",
-      color: "#0f172a",
-    },
-    badge: {
-      backgroundColor: "#2563eb",
-      color: "#ffffff",
-      padding: "6px 14px",
-      borderRadius: "9999px",
-      fontSize: "12px",
-      fontWeight: "700",
-    },
-    questionBox: {
-      backgroundColor: "#f8fafc",
-      borderLeft: "4px solid #2563eb",
-      padding: "24px",
-      borderRadius: "0 12px 12px 0",
-      fontSize: "18px",
-      lineHeight: "1.6",
-      fontWeight: "700",
-      color: "#0f172a",
-      marginBottom: "30px",
-    },
-    textareaWrapper: {
-      position: "relative",
-      marginBottom: "25px",
-    },
-    textarea: {
-      width: "100%",
-      minHeight: "150px",
-      padding: "20px 60px 20px 20px",
-      borderRadius: "14px",
-      border: "1px solid #cbd5e1",
-      fontSize: "15px",
-      fontFamily: "inherit",
-      boxSizing: "border-box",
-      resize: "vertical",
-      color: "#334155",
-      backgroundColor: "#ffffff",
-      lineHeight: "1.5",
-    },
-    micButton: {
-      position: "absolute",
-      right: "20px",
-      bottom: "20px",
-      backgroundColor: isListening ? "#ef4444" : "#2563eb",
-      color: "#ffffff",
-      border: "none",
-      borderRadius: "50%",
-      width: "44px",
-      height: "44px",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "18px",
-      boxShadow: "0 4px 10px rgba(37, 99, 235, 0.2)",
-      transition: "all 0.2s ease",
-    },
-    button: {
-      padding: "14px 28px",
-      fontSize: "16px",
-      fontWeight: "700",
-      color: "#ffffff",
-      backgroundColor: "#2563eb",
-      border: "none",
-      borderRadius: "12px",
-      cursor: "pointer",
-      boxShadow: "0 4px 12px rgba(37, 99, 235, 0.15)",
-      float: "right",
-    },
-    loadingText: {
-      textAlign: "center",
-      fontSize: "18px",
-      color: "#64748b",
-      margin: "40px 0",
-    },
-  };
-
-  if (loading) {
-    return (
-      <div
-        style={{ ...styles.rightPane, maxWidth: "700px", margin: "100px auto" }}
-      >
-        <div style={styles.loadingText}>
-          Loading dynamic question tracking...
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div style={styles.layout}>
-      {/* MONITOR PANE PANEL */}
-      <div style={styles.leftPane}>
-        <div style={styles.proctorCard}>
-          <p style={styles.proctorTitle}>
-            <span style={{ color: "#ef4444" }}>🔴</span> PROCTOR MONITORING
-            ACTIVE
-          </p>
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            style={styles.video}
-          />
-        </div>
-      </div>
+    <div style={pageStyle}>
+      <style>{responsiveStyles}</style>
+      <div style={shellStyle} className="interview-shell">
+        <section style={leftPanelStyle}>
+          <div style={headerRowStyle}>
+            <div>
+              <div style={badgeStyle}>Question {resolvedIndex + 1} of {mockQuestions.length}</div>
+              <h1 style={titleStyle}>Live Interview Console</h1>
+            </div>
+            <div style={statusPillStyle}>{aiStatus}</div>
+          </div>
 
-      {/* QUESTION CONTENT CARD */}
-      <div style={styles.rightPane}>
-        <div style={styles.header}>
-          <h3 style={styles.roomTitle}>Technical Interview Room</h3>
-          <span style={styles.badge}>Question {questionId} of 5</span>
-        </div>
+          <div style={metricRowStyle}>
+            <div style={metricCardStyle}>
+              <div style={metricLabelStyle}>Engine</div>
+              <div style={metricValueStyle}>Online</div>
+            </div>
+            <div style={metricCardStyle}>
+              <div style={metricLabelStyle}>Capture</div>
+              <div style={metricValueStyle}>{isRecording ? "Listening" : "Idle"}</div>
+            </div>
+            <div style={metricCardStyle}>
+              <div style={metricLabelStyle}>Status</div>
+              <div style={metricValueStyle}>{loadingNext ? "Processing" : "Ready"}</div>
+            </div>
+          </div>
 
-        {error && (
-          <p
-            style={{
-              color: "#dc2626",
-              fontWeight: "600",
-              marginBottom: "15px",
-            }}
-          >
-            ⚠️ {error}
-          </p>
-        )}
+          <div style={questionCardStyle}>
+            <div style={sectionLabelStyle}>TARGET TECHNICAL QUESTION</div>
+            <p style={questionTextStyle}>{activeQuestion.question}</p>
+          </div>
 
-        <div style={styles.questionBox}>{question}</div>
-
-        <form onSubmit={handleFormSubmit}>
-          <label
-            style={{
-              fontSize: "11px",
-              fontWeight: "800",
-              color: "#64748b",
-              textTransform: "uppercase",
-              display: "block",
-              marginBottom: "8px",
-              letterSpacing: "0.5px",
-            }}
-          >
-            YOUR ANSWER:
-          </label>
-          <div style={styles.textareaWrapper}>
+          <div style={transcriptCardStyle}>
+            <div style={transcriptHeaderStyle}>
+              <div style={sectionLabelStyle}>LIVE TRANSCRIPT</div>
+              <div style={helperTextStyle}>Editable response buffer</div>
+            </div>
             <textarea
-              style={styles.textarea}
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Type your description text or utilize the microphone dictation switch..."
-              required
+              value={userTranscript}
+              onChange={(event) => setUserTranscript(event.target.value)}
+              placeholder="Speak naturally or type your answer here..."
+              style={textAreaStyle}
             />
+          </div>
+
+          <div style={actionRowStyle}>
+            <button
+              type="button"
+              onClick={toggleRecording}
+              disabled={loadingNext}
+              style={{
+                ...buttonBaseStyle,
+                ...micButtonStyle,
+                background: isRecording ? "#dc2626" : "#2563eb",
+              }}
+            >
+              {isRecording ? "Stop Capture Microphone" : "Start Capture Microphone"}
+            </button>
 
             <button
               type="button"
-              onClick={toggleListening}
-              style={styles.micButton}
-              title={
-                isListening ? "Stop voice dictation" : "Start voice dictation"
-              }
+              onClick={handleNextOrSubmit}
+              disabled={loadingNext}
+              style={{
+                ...buttonBaseStyle,
+                ...nextButtonStyle,
+                opacity: loadingNext ? 0.8 : 1,
+              }}
             >
-              {isListening ? "🛑" : "🎤"}
+              {loadingNext
+                ? "Processing Matrix..."
+                : resolvedIndex < mockQuestions.length - 1
+                  ? "Next"
+                  : "Submit Interview"}
             </button>
+          </div>
+        </section>
+
+        <aside style={cameraPanelStyle}>
+          <div style={cameraHeaderStyle}>
+            <div style={sectionLabelStyle}>CAMERA OVERLAY</div>
+            <div style={{ ...cameraBadgeStyle, background: cameraReady ? "#16a34a" : "#64748b" }}>
+              {cameraReady ? "LIVE" : "WAITING"}
+            </div>
           </div>
 
-          <div style={{ overflow: "hidden" }}>
-            <button type="submit" disabled={submitting} style={styles.button}>
-              {submitting ? "Submitting..." : "Submit Answer ➡️"}
-            </button>
+          <div style={cameraViewportStyle}>
+            <video ref={videoRef} autoPlay playsInline muted style={videoStyle} />
+            {!cameraReady && <div style={cameraPlaceholderStyle}>Grant camera access to begin</div>}
           </div>
-        </form>
+
+          {cameraError ? (
+            <div style={cameraErrorStyle}>{cameraError}</div>
+          ) : (
+            <div style={cameraHintStyle}>Local stream is attached directly to the live overlay surface.</div>
+          )}
+        </aside>
       </div>
     </div>
   );
 };
+
+const pageStyle = {
+  minHeight: "100vh",
+  background: "#020617",
+  color: "#e2e8f0",
+  padding: "24px",
+  fontFamily: "Inter, Segoe UI, sans-serif",
+};
+
+const shellStyle = {
+  maxWidth: "1400px",
+  margin: "0 auto",
+  display: "grid",
+  gridTemplateColumns: "1.4fr 0.8fr",
+  gap: "24px",
+};
+
+const leftPanelStyle = {
+  background: "#111827",
+  border: "1px solid #334155",
+  borderRadius: "24px",
+  padding: "24px",
+  boxShadow: "0 24px 60px rgba(2, 6, 23, 0.35)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "18px",
+};
+
+const headerRowStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "12px",
+  paddingBottom: "8px",
+  borderBottom: "1px solid #1f2937",
+};
+
+const badgeStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  borderRadius: "999px",
+  background: "#f97316",
+  color: "#fff",
+  padding: "6px 12px",
+  fontSize: "12px",
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  width: "fit-content",
+};
+
+const titleStyle = {
+  margin: "8px 0 0",
+  fontSize: "24px",
+  fontWeight: 700,
+  color: "#f8fafc",
+};
+
+const statusPillStyle = {
+  background: "rgba(56, 189, 248, 0.16)",
+  color: "#7dd3fc",
+  border: "1px solid rgba(56, 189, 248, 0.24)",
+  borderRadius: "999px",
+  padding: "10px 14px",
+  fontSize: "13px",
+  fontWeight: 600,
+};
+
+const metricRowStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "12px",
+};
+
+const metricCardStyle = {
+  background: "#1e293b",
+  border: "1px solid #334155",
+  borderRadius: "14px",
+  padding: "12px 14px",
+};
+
+const metricLabelStyle = {
+  fontSize: "11px",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "#94a3b8",
+};
+
+const metricValueStyle = {
+  marginTop: "4px",
+  fontSize: "15px",
+  color: "#f8fafc",
+  fontWeight: 600,
+};
+
+const questionCardStyle = {
+  background: "#0f172a",
+  border: "1px solid #334155",
+  borderRadius: "18px",
+  padding: "18px",
+};
+
+const sectionLabelStyle = {
+  fontSize: "11px",
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: "#64748b",
+  marginBottom: "8px",
+};
+
+const questionTextStyle = {
+  color: "#f8fafc",
+  fontSize: "19px",
+  lineHeight: 1.7,
+  margin: 0,
+};
+
+const transcriptCardStyle = {
+  background: "#0f172a",
+  border: "1px solid #334155",
+  borderRadius: "18px",
+  padding: "16px",
+};
+
+const transcriptHeaderStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "8px",
+  marginBottom: "10px",
+};
+
+const helperTextStyle = {
+  fontSize: "12px",
+  color: "#94a3b8",
+};
+
+const textAreaStyle = {
+  width: "100%",
+  minHeight: "140px",
+  background: "#111827",
+  border: "1px solid #334155",
+  color: "#f8fafc",
+  borderRadius: "14px",
+  padding: "14px",
+  fontSize: "14px",
+  resize: "vertical",
+  boxSizing: "border-box",
+  lineHeight: 1.6,
+};
+
+const actionRowStyle = {
+  display: "flex",
+  gap: "12px",
+  flexWrap: "wrap",
+  marginTop: "6px",
+};
+
+const buttonBaseStyle = {
+  border: "none",
+  borderRadius: "14px",
+  padding: "12px 18px",
+  fontSize: "14px",
+  fontWeight: 700,
+  cursor: "pointer",
+  color: "#fff",
+};
+
+const micButtonStyle = {
+  background: "#2563eb",
+  flex: "1 1 220px",
+};
+
+const nextButtonStyle = {
+  background: "#10b981",
+  flex: "1 1 180px",
+};
+
+const cameraPanelStyle = {
+  background: "#111827",
+  border: "1px solid #334155",
+  borderRadius: "24px",
+  padding: "20px",
+  boxShadow: "0 24px 60px rgba(2, 6, 23, 0.35)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "14px",
+};
+
+const cameraHeaderStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const cameraBadgeStyle = {
+  borderRadius: "999px",
+  padding: "6px 10px",
+  color: "#fff",
+  fontSize: "12px",
+  fontWeight: 700,
+};
+
+const cameraViewportStyle = {
+  position: "relative",
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  borderRadius: "18px",
+  minHeight: "420px",
+  overflow: "hidden",
+  border: "1px solid #334155",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const videoStyle = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  background: "#020617",
+};
+
+const cameraPlaceholderStyle = {
+  position: "absolute",
+  inset: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#cbd5e1",
+  fontSize: "18px",
+  fontWeight: 600,
+  textAlign: "center",
+  padding: "20px",
+  background: "rgba(2, 6, 23, 0.72)",
+};
+
+const cameraErrorStyle = {
+  color: "#fda4af",
+  fontSize: "13px",
+  lineHeight: 1.5,
+};
+
+const cameraHintStyle = {
+  fontSize: "13px",
+  color: "#94a3b8",
+  lineHeight: 1.5,
+};
+
+const responsiveStyles = `
+  @media (max-width: 980px) {
+    .interview-shell {
+      grid-template-columns: 1fr !important;
+    }
+  }
+`;
 
 export default InterviewRoom;
