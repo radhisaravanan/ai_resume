@@ -5,16 +5,9 @@ function About() {
 
         <section className="about" id="about">
 
-            <div className="about-left">
+           
 
-                <img
-                    src="https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=700"
-                    alt="AI Technology"
-                />
-
-            </div>
-
-            <div className="about-right">
+            <div className="about-center">
 
                 <span className="about-tag">
                     About Our Platform
@@ -38,29 +31,9 @@ function About() {
                     interviews.
                 </p>
 
-                <div className="about-boxes">
+               
 
-                    <div className="about-box">
-
-                        <h3>Resume Based</h3>
-
-                        <p>
-                            Questions are generated from your uploaded resume.
-                        </p>
-
-                    </div>
-
-                    <div className="about-box">
-
-                        <h3>AI Evaluation</h3>
-
-                        <p>
-                            AI evaluates confidence, communication, and technical skills.
-                        </p>
-
-                    </div>
-
-                </div>
+             
 
             </div>
 
