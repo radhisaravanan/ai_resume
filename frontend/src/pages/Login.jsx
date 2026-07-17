@@ -51,7 +51,7 @@ function Login() {
               <FaUserGraduate className="header-icon" />
               Student Login
             </h2>
-            <p>Sign in to start your AI Interview</p>
+           
           </div>
 
           <form onSubmit={handleLogin}>

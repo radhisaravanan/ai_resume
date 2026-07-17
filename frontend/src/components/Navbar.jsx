@@ -8,7 +8,7 @@ function Navbar() {
         <nav className="navbar">
 
             <Link to="/" className="logo">
-                🤖 AI Interview
+                🤖 MZORA AI
             </Link>
 
             <ul className="nav-links">

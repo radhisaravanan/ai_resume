@@ -9,7 +9,6 @@ function Register() {
   const [form, setForm] = useState({
     fullname: "",
     regno: "",
-    phone: "",
     college: "",
     password: "",
     confirmPassword: "",
@@ -38,7 +37,6 @@ function Register() {
       const response = await API.post("/auth/register", {
         full_name: form.fullname,
         regno: form.regno,
-        phone: form.phone,
         college: form.college,
         password: form.password,
       });
@@ -50,8 +48,6 @@ function Register() {
         alert(response.data.message);
       }
     } catch (error) {
-      console.log(error);
-
       alert(
         error.response?.data?.message ||
           error.message ||
@@ -64,86 +60,64 @@ function Register() {
 
   return (
     <div className="register-page">
-      <div className="register-left">
-        <div className="overlay">
-          <h1>Create Account</h1>
+      <div className="register-card">
+        <h2>Create Account</h2>
 
-          <p>
-            Join AI Voice Interview Assistant and improve your interview skills
-            using AI.
-          </p>
-        </div>
-      </div>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="fullname"
+            placeholder="Full Name"
+            value={form.fullname}
+            onChange={handleChange}
+            required
+          />
 
-      <div className="register-right">
-        <div className="register-card">
-          <h2>Register</h2>
+          <input
+            type="text"
+            name="regno"
+            placeholder="Register Number"
+            value={form.regno}
+            onChange={handleChange}
+            required
+          />
 
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="fullname"
-              placeholder="Full Name"
-              value={form.fullname}
-              onChange={handleChange}
-              required
-            />
+          <input
+            type="text"
+            name="college"
+            placeholder="College Name"
+            value={form.college}
+            onChange={handleChange}
+            required
+          />
 
-            <input
-              type="text"
-              name="regno"
-              placeholder="Register Number"
-              value={form.regno}
-              onChange={handleChange}
-              required
-            />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
 
-            <input
-              type="text"
-              name="phone"
-              placeholder="Phone Number"
-              value={form.phone}
-              onChange={handleChange}
-              required
-            />
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            required
+          />
 
-            <input
-              type="text"
-              name="college"
-              placeholder="College Name"
-              value={form.college}
-              onChange={handleChange}
-              required
-            />
+          <button type="submit" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-
-            <button type="submit" disabled={loading}>
-              {loading ? "Registering..." : "Register"}
-            </button>
-          </form>
-
-          <p>
-            Already have an account?{" "}
-            <Link to="/login">Login</Link>
-          </p>
-        </div>
+        <p>
+          Already have an account?{" "}
+          <Link to="/login">Login</Link>
+        </p>
       </div>
     </div>
   );
